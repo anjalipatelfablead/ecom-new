@@ -1,0 +1,265 @@
+"use client";
+
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+// import { useCart } from "@/lib/cart-context";
+import { fetchProducts, fetchProductById } from "@/redux/products/productSlice";
+import { AppDispatch, RootState } from "@/redux/store";
+import { ArrowLeft, Minus, Plus, ShoppingCart, Star, Heart } from "lucide-react";
+import Image from "next/image";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { toast } from "sonner";
+
+import { createCart } from "@/redux/products/cartSlice";
+import { addToWishlist } from "@/redux/products/wishlistSlice";
+
+export default function ProductDetailsPage() {
+  // const params = useParams();
+  const router = useRouter();
+  // const dispatch = useDispatch<AppDispatch>();
+  // const { addToCart } = useCart();
+
+  // const productId = parseInt(params.id as string);
+  // const product = useSelector((state: RootState) => selectProductById(state, productId));
+  const productsStatus = useSelector((state: RootState) => state.products.status);
+
+  const [quantity, setQuantity] = useState(1);
+
+  // useEffect(() => {
+  //   if (productsStatus === "idle") {
+  //     dispatch(fetchProducts());
+  //   }
+  // }, [productsStatus, dispatch]);
+
+  const loggedUser = JSON.parse(
+    sessionStorage.getItem("user") || "{}"
+  );
+
+
+  const params = useParams();
+  const productId = params.id as string;
+
+  const dispatch = useDispatch<AppDispatch>();
+  const { selectedProduct: product, status } = useSelector(
+    (state: RootState) => state.products
+  );
+
+  useEffect(() => {
+    if (productId) {
+      dispatch(fetchProductById(productId));
+    }
+  }, [dispatch, productId]);
+
+
+
+
+  // const handleAddToCart = () => {
+  //   if (product) {
+  //     addToCart(product, quantity);
+  //     toast.success(`${quantity} × ${product.title} added to cart!`);
+  //     router.push("/cart");
+  //   }
+  // };
+
+  // const handleAddToCart = () => {
+  //   if (!product) return;
+
+  //   dispatch(createCart({ product, quantity, }));
+
+  //   toast.success(`${quantity} × ${product.title} added to cart!`);
+  //   router.push("/cart");
+  // };
+
+  const handleAddToCart = async () => {
+    if (!product) return;
+
+    const loggedUser = JSON.parse(
+      sessionStorage.getItem("user") || "{}"
+    );
+
+    if (!loggedUser?._id) {
+      toast.error("Please login first");
+      return;
+    }
+
+    await dispatch(
+      createCart({
+        user: loggedUser._id,
+        items: [
+          {
+            product: product._id,
+            quantity: quantity,
+          },
+        ],
+      })
+    );
+
+    toast.success(`${quantity} × ${product.title} added to cart!`);
+    router.push("/cart");
+  };
+
+  const handleAddToWishlist = () => {
+    if (!product) return;
+    dispatch(addToWishlist(product));
+    toast.success(`${product.title} added to wishlist `);
+  };
+
+
+
+  const increaseQuantity = () => setQuantity((q) => q + 1);
+  const decreaseQuantity = () => setQuantity((q) => Math.max(1, q - 1));
+
+  if (productsStatus === "loading" && !product) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex h-64 items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!product && productsStatus === "succeeded") {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">
+          <h1 className="mb-4 text-2xl font-bold">Product Not Found</h1>
+          <Button onClick={() => router.push("/")}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Home
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Guard: if product is still undefined for any other status, avoid rendering
+  if (!product) {
+    return null;
+  }
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <Button variant="ghost" onClick={() => router.back()} className="mb-6">
+        <ArrowLeft className="mr-2 h-4 w-4" />
+        Back
+      </Button>
+
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+        {/* Product Image */}
+        <div className="space-y-4">
+          <div className="relative aspect-square overflow-hidden rounded-lg bg-white  ">
+            <Image
+              src={product.image}
+              alt={product.title}
+              fill
+              className="object-contain p-6"
+              priority
+              unoptimized
+            />
+          </div>
+        </div>
+
+        {/* Product Details */}
+        <div className="space-y-6">
+          <div>
+            {product.category && (
+              <Badge variant="secondary" className="mb-2">
+                {product.category}
+              </Badge>
+            )}
+            <h1 className="mb-4 text-3xl font-bold">{product.title}</h1>
+            <p className="text-primary mb-4 text-4xl font-bold">
+              ${product.price.toFixed(2)}
+            </p>
+          </div>
+
+          {product.rating && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <div className="flex items-center gap-1">
+                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                <span className="font-medium text-black dark:text-white">
+                  {product.rating.rate}
+                </span>
+              </div>
+              <span>({product.rating.count} reviews)</span>
+            </div>
+          )}
+
+          {product.description && (
+            <div>
+              <h3 className="mb-2 text-lg font-semibold">Description</h3>
+              <p className="text-muted-foreground leading-relaxed">
+                {product.description}
+              </p>
+            </div>
+          )}
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="space-y-4">
+                <div>
+                  <label className="mb-2 block text-sm font-medium">
+                    Quantity
+                  </label>
+                  <div className="flex items-center space-x-3">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={decreaseQuantity}
+                      disabled={quantity <= 1}
+                    >
+                      <Minus className="h-4 w-4" />
+                    </Button>
+                    <span className="min-w-8 text-center text-lg font-medium">
+                      {quantity}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={increaseQuantity}
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="space-y-3 pt-4">
+                  <div className="grid grid-cols-2 gap-3 pt-4">
+                    <Button
+                      onClick={handleAddToCart}
+                      className="w-full"
+                      size="lg"
+                    >
+                      <ShoppingCart className="mr-2 h-4 w-4" />
+                      Add to Cart - ${(product.price * quantity).toFixed(2)}
+                    </Button>
+
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      onClick={handleAddToWishlist}
+                      className="w-full bg-gray-600 text-white hover:bg-gray-200"
+                    >
+                      <Heart className="mr-2 h-4 w-4 text-red-500" />
+                      Wishlist
+                    </Button>
+                  </div>
+
+                  <div className="text-muted-foreground space-y-1 text-sm">
+                    <p>✓ Free shipping on orders over $100</p>
+                    <p>✓ 30-day return policy</p>
+                    <p>✓ 1-year warranty included</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}

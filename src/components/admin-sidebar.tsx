@@ -2,11 +2,12 @@
 
 import ModeToggle from "@/components/mode-toggle";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/utils";
 import { Home, LogOut, Package, Plus } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useDispatch } from "react-redux";
+import { logout as logoutAction } from "@/redux/auth/authSlice";
 
 const sidebarItems = [
   {
@@ -28,7 +29,13 @@ const sidebarItems = [
 
 export default function AdminSidebar() {
   const pathname = usePathname();
-  const { logout } = useAuth();
+  const router = useRouter();
+  const dispatch = useDispatch();
+
+  const handleLogout = () => {
+    dispatch(logoutAction());
+    router.push("/login");
+  };
 
   return (
     <div className="bg-background flex h-full w-64 flex-col border-r">
@@ -72,7 +79,7 @@ export default function AdminSidebar() {
           variant="ghost"
           className="w-full justify-start"
           size="sm"
-          onClick={logout}
+          onClick={handleLogout}
         >
           <LogOut className="mr-2 h-4 w-4" />
           Logout

@@ -39,12 +39,12 @@ export default function ProductList() {
     <div className="mb-8">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-3xl font-bold">Featured Products</h2>
-        <Link href="/admin/add-product">
+        {/* <Link href="/admin/add-product">
           <Button>
             <Plus className="mr-2 h-4 w-4" />
             Add Product
           </Button>
-        </Link>
+        </Link> */}
       </div>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {products.map((product) =>

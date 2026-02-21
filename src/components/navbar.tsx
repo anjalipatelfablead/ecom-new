@@ -267,6 +267,15 @@ export default function Navbar() {
                     </Link>
                   </DropdownMenuItem>
 
+                  {loggedUser.role === "admin" && (
+                    <DropdownMenuItem asChild>
+                      <Link href="/admin" className="flex items-center">
+                        <Shield className="mr-2 h-4 w-4" />
+                        <span>Admin Dashboard</span>
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
+
                   <DropdownMenuItem asChild>
                     <Link href="/orders" className="flex items-center">
                       <Package className="mr-2 h-4 w-4" />

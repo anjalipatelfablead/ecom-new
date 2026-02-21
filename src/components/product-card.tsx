@@ -67,22 +67,28 @@ export default function ProductCard({ product }: ProductCardProps) {
     }
 
     try {
-      const existingItem = items.find(
+      if (!cartId && items.length === 0) {
+        await dispatch(fetchCart(userId)).unwrap();
+      }
+
+      const currentCartId = cartId;
+      const currentItems = items;
+
+      const existingItem = currentItems.find(
         (item) => item.product._id === product._id
       );
 
       let updatedItems;
 
       if (existingItem) {
-        // Increase quantity
-        updatedItems = items.map((item) =>
+        updatedItems = currentItems.map((item) =>
           item.product._id === product._id
             ? { product: product._id!, quantity: item.quantity + 1 }
             : { product: item.product._id!, quantity: item.quantity }
         );
       } else {
         updatedItems = [
-          ...items.map((item) => ({
+          ...currentItems.map((item) => ({
             product: item.product._id!,
             quantity: item.quantity,
           })),
@@ -90,25 +96,23 @@ export default function ProductCard({ product }: ProductCardProps) {
         ];
       }
 
-      if (!cartId) {
+      if (!currentCartId) {
         await dispatch(
           createCart({
             user: userId,
             items: [{ product: product._id!, quantity: 1 }],
           })
         ).unwrap();
-        await dispatch(fetchCart(userId));
-
       } else {
         await dispatch(
           updateCart({
-            cartId,
+            cartId: currentCartId,
             items: updatedItems,
           })
         ).unwrap();
-        await dispatch(fetchCart(userId));
       }
 
+      await dispatch(fetchCart(userId));
       toast.success(`${product.title} added to cart!`);
     } catch (error) {
       toast.error("Failed to update cart");

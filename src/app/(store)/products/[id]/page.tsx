@@ -13,39 +13,28 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "sonner";
 
-import { createCart } from "@/redux/products/cartSlice";
+import { createCart, updateCart, fetchCart } from "@/redux/products/cartSlice";
 import { addToWishlist } from "@/redux/products/wishlistSlice";
 
 export default function ProductDetailsPage() {
-  // const params = useParams();
   const router = useRouter();
-  // const dispatch = useDispatch<AppDispatch>();
-  // const { addToCart } = useCart();
-
-  // const productId = parseInt(params.id as string);
-  // const product = useSelector((state: RootState) => selectProductById(state, productId));
   const productsStatus = useSelector((state: RootState) => state.products.status);
-
-  const [quantity, setQuantity] = useState(1);
-
-  // useEffect(() => {
-  //   if (productsStatus === "idle") {
-  //     dispatch(fetchProducts());
-  //   }
-  // }, [productsStatus, dispatch]);
-
-  const loggedUser = JSON.parse(
-    sessionStorage.getItem("user") || "{}"
+  const { selectedProduct: product, status } = useSelector(
+    (state: RootState) => state.products
+  );
+  const { cartId, items } = useSelector(
+    (state: RootState) => state.cart
+  );
+  const userId = useSelector(
+    (state: RootState) => state.auth.currentUser?._id
   );
 
+  const [quantity, setQuantity] = useState(1);
 
   const params = useParams();
   const productId = params.id as string;
 
   const dispatch = useDispatch<AppDispatch>();
-  const { selectedProduct: product, status } = useSelector(
-    (state: RootState) => state.products
-  );
 
   useEffect(() => {
     if (productId) {
@@ -74,31 +63,63 @@ export default function ProductDetailsPage() {
   // };
 
   const handleAddToCart = async () => {
-    if (!product) return;
-
-    const loggedUser = JSON.parse(
-      sessionStorage.getItem("user") || "{}"
-    );
-
-    if (!loggedUser?._id) {
+    if (!product || !userId) {
       toast.error("Please login first");
       return;
     }
 
-    await dispatch(
-      createCart({
-        user: loggedUser._id,
-        items: [
-          {
-            product: product._id,
-            quantity: quantity,
-          },
-        ],
-      })
-    );
+    try {
+      if (!cartId && items.length === 0) {
+        await dispatch(fetchCart(userId)).unwrap();
+      }
 
-    toast.success(`${quantity} × ${product.title} added to cart!`);
-    router.push("/cart");
+      const currentCartId = cartId;
+      const currentItems = items;
+
+      const existingItem = currentItems.find(
+        (item) => item.product._id === product._id
+      );
+
+      let updatedItems;
+
+      if (existingItem) {
+        updatedItems = currentItems.map((item) =>
+          item.product._id === product._id
+            ? { product: product._id, quantity: item.quantity + quantity }
+            : { product: item.product._id!, quantity: item.quantity }
+        );
+      } else {
+        updatedItems = [
+          ...currentItems.map((item) => ({
+            product: item.product._id!,
+            quantity: item.quantity,
+          })),
+          { product: product._id, quantity: quantity },
+        ];
+      }
+
+      if (!currentCartId) {
+        await dispatch(
+          createCart({
+            user: userId,
+            items: [{ product: product._id, quantity: quantity }],
+          })
+        ).unwrap();
+      } else {
+        await dispatch(
+          updateCart({
+            cartId: currentCartId,
+            items: updatedItems,
+          })
+        ).unwrap();
+      }
+
+      await dispatch(fetchCart(userId));
+      toast.success(`${quantity} × ${product.title} added to cart!`);
+      router.push("/cart");
+    } catch (error) {
+      toast.error("Failed to add to cart");
+    }
   };
 
   const handleAddToWishlist = () => {

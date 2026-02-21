@@ -153,7 +153,7 @@ const SingleCartItem = memo(function SingleCartItem({
                         <Link href={`/products/${product._id}`}>
                             <h3 className="font-semibold cursor-pointer hover:text-primary truncate">
                                 {product.title}
-                            </h3>quantity
+                            </h3>
                         </Link>
                         <p className="text-sm text-muted-foreground">
                             ${product.price.toFixed(2)} each

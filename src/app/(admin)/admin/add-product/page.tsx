@@ -11,25 +11,37 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { AppDispatch, RootState } from "@/redux/store";
+import { uploadProductImage, createProduct, setImageUrl, resetForm } from "@/redux/products/productFormSlice";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
+import { useDispatch, useSelector } from "react-redux";
 import * as z from "zod";
+import Image from "next/image";
+import { Upload, X } from "lucide-react";
+import { toast } from "sonner";
 
 const productSchema = z.object({
   title: z.string().min(1, "Product title is required"),
   price: z.string().min(1, "Price is required"),
-  image: z.string().url("Please enter a valid URL").optional(),
-  description: z.string().optional(),
-  category: z.string().optional(),
+  image: z.string().min(1, "Product image is required"),
+  description: z.string().min(1, "Description is required"),
+  category: z.string().min(1, "Category is required"),
 });
 
 type ProductFormData = z.infer<typeof productSchema>;
 
 export default function AddProductPage() {
   const router = useRouter();
+  const dispatch = useDispatch<AppDispatch>();
   const [loading, setLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const { imageUploadStatus, imageUrl } = useSelector(
+    (state: RootState) => state.productForm
+  );
 
   const form = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
@@ -42,24 +54,49 @@ export default function AddProductPage() {
     },
   });
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("image", file);
+
+    try {
+      const result = await dispatch(uploadProductImage(formData)).unwrap();
+      form.setValue("image", result);
+      toast.success("Image uploaded successfully");
+    } catch (error: any) {
+      console.error("Image upload error:", error);
+      toast.error(error?.message || "Failed to upload image");
+    }
+  };
+
+  const removeImage = () => {
+    dispatch(setImageUrl(""));
+    form.setValue("image", "");
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
   const onSubmit = async (data: ProductFormData) => {
     setLoading(true);
     try {
-      const response = await fetch("/api/products", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (response.ok) {
-        router.push("/admin/products");
-      } else {
-        console.error("Failed to add product");
-      }
-    } catch (error) {
-      console.error("Error adding product:", error);
+      const productData = {
+        title: data.title,
+        price: parseFloat(data.price),
+        description: data.description,
+        category: data.category,
+        image: imageUrl || data.image,
+      };
+      
+      await dispatch(createProduct(productData)).unwrap();
+      dispatch(resetForm());
+      toast.success("Product added successfully");
+      router.push("/admin/products");
+    } catch (error: any) {
+      console.error("Error:", error);
+      toast.error(error?.message || "Failed to add product");
     } finally {
       setLoading(false);
     }
@@ -136,12 +173,63 @@ export default function AddProductPage() {
                 name="image"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Image URL</FormLabel>
+                    <FormLabel>Product Image</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="https://example.com/image.jpg"
-                        {...field}
-                      />
+                      <div className="space-y-4">
+                        {imageUrl ? (
+                          <div className="relative inline-block">
+                            <Image
+                              src={imageUrl}
+                              alt="Product"
+                              width={200}
+                              height={200}
+                              className="rounded-lg object-cover"
+                              unoptimized
+                            />
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="icon"
+                              className="absolute -top-2 -right-2 h-6 w-6"
+                              onClick={removeImage}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-center w-full">
+                            <label
+                              htmlFor="dropzone-file"
+                              className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100"
+                            >
+                              <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                                <Upload className="w-8 h-8 mb-2 text-gray-500" />
+                                <p className="text-sm text-gray-500">
+                                  <span className="font-semibold">Click to upload</span> or drag and drop
+                                </p>
+                                <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                              </div>
+                              <input
+                                id="dropzone-file"
+                                type="file"
+                                ref={fileInputRef}
+                                className="hidden"
+                                accept="image/*"
+                                onChange={handleImageUpload}
+                                disabled={imageUploadStatus === "uploading"}
+                              />
+                            </label>
+                          </div>
+                        )}
+                        {imageUploadStatus === "uploading" && (
+                          <p className="text-sm text-muted-foreground">Uploading...</p>
+                        )}
+                        <Input
+                          type="hidden"
+                          {...field}
+                          value={field.value || ""}
+                        />
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -167,7 +255,7 @@ export default function AddProductPage() {
               />
 
               <div className="flex gap-4">
-                <Button type="submit" disabled={loading}>
+                <Button type="submit" disabled={loading || imageUploadStatus === "uploading"}>
                   {loading ? "Adding Product..." : "Add Product"}
                 </Button>
                 <Button

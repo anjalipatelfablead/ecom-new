@@ -136,6 +136,35 @@ export const fetchProductById = createAsyncThunk<
   }
 );
 
+export const deleteProduct = createAsyncThunk<
+  string,
+  string,
+  { rejectValue: string }
+>("products/deleteProduct", async (id, { rejectWithValue }) => {
+  try {
+    await axios.delete(`http://localhost:3030/ecom/product/${id}`);
+    return id;
+  } catch (error) {
+    return rejectWithValue("Failed to delete product");
+  }
+});
+
+export const addProduct = createAsyncThunk<
+  Product,
+  Omit<Product, "_id">,
+  { rejectValue: string }
+>("products/addProduct", async (productData, { rejectWithValue }) => {
+  try {
+    const response = await axios.post(
+      "http://localhost:3030/ecom/product",
+      productData
+    );
+    return response.data.data;
+  } catch (error) {
+    return rejectWithValue("Failed to add product");
+  }
+});
+
 
 
 const productSlice = createSlice({
@@ -174,6 +203,26 @@ const productSlice = createSlice({
       .addCase(fetchProductById.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload || "Failed to fetch product";
+      })
+
+      .addCase(deleteProduct.fulfilled, (state, action: PayloadAction<string>) => {
+        state.items = state.items.filter((product) => product._id !== action.payload);
+      })
+      .addCase(deleteProduct.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload || "Failed to delete product";
+      })
+
+      .addCase(addProduct.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(addProduct.fulfilled, (state, action: PayloadAction<Product>) => {
+        state.status = "succeeded";
+        state.items.push(action.payload);
+      })
+      .addCase(addProduct.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload || "Failed to add product";
       });
   },
 });

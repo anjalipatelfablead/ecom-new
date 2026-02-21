@@ -11,7 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { fetchProducts } from "@/redux/products/productSlice";
+import { fetchProducts, deleteProduct } from "@/redux/products/productSlice";
 import { AppDispatch, RootState } from "@/redux/store";
 import { Edit, Plus, Trash2 } from "lucide-react";
 import Image from "next/image";
@@ -29,9 +29,10 @@ export default function AdminProductsPage() {
     }
   }, [status, dispatch]);
 
-  const handleDelete = async (id: number) => {
-    // In a real app, you would implement delete functionality
-    console.log("Delete product:", id);
+  const handleDelete = async (id: string) => {
+    if (window.confirm("Are you sure you want to delete this product?")) {
+      dispatch(deleteProduct(id));
+    }
   };
 
   if (status === "loading") {
@@ -78,7 +79,7 @@ export default function AdminProductsPage() {
               </TableHeader>
               <TableBody>
                 {products.map((product) => (
-                  <TableRow key={product.id}>
+                  <TableRow key={product._id}>
                     <TableCell>
                       <div className="flex items-center space-x-3">
                         <Image
@@ -92,7 +93,7 @@ export default function AdminProductsPage() {
                         <div>
                           <div className="font-medium">{product.title}</div>
                           <div className="text-muted-foreground text-sm">
-                            ID: {product.id}
+                            ID: {product._id}
                           </div>
                         </div>
                       </div>
@@ -113,7 +114,7 @@ export default function AdminProductsPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleDelete(product.id)}
+                          onClick={() => handleDelete(product._id)}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>

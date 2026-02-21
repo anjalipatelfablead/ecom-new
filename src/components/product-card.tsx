@@ -43,6 +43,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { toast } from "sonner";
 import { addToWishlist } from "@/redux/products/wishlistSlice";
+import { getImageUrl } from "@/lib/utils";
 
 interface ProductCardProps {
   product: Product;
@@ -129,7 +130,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       <Link href={`/products/${product._id}`}>
         <div className="group relative flex h-full w-full items-center justify-center overflow-hidden rounded-lg border border-neutral-400 bg-white dark:border-neutral-800 dark:bg-black">
           <Image
-            src={product.image}
+            src={getImageUrl(product.image)}
             alt={product.title}
             fill
             unoptimized

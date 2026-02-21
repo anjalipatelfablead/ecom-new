@@ -15,6 +15,7 @@ import { toast } from "sonner";
 
 import { createCart, updateCart, fetchCart } from "@/redux/products/cartSlice";
 import { addToWishlist } from "@/redux/products/wishlistSlice";
+import { getImageUrl } from "@/lib/utils";
 
 export default function ProductDetailsPage() {
   const router = useRouter();
@@ -174,7 +175,7 @@ export default function ProductDetailsPage() {
         <div className="space-y-4">
           <div className="relative aspect-square overflow-hidden rounded-lg bg-white  ">
             <Image
-              src={product.image}
+              src={getImageUrl(product.image)}
               alt={product.title}
               fill
               className="object-contain p-6"

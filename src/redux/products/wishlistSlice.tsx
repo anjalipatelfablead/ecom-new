@@ -114,7 +114,7 @@ const wishlistSlice = createSlice({
             const data = loadAllWishlists();
             const list = data[state.userEmail] || [];
 
-            const exists = list.some(item => item.id === action.payload.id);
+            const exists = list.some(item => item._id === action.payload._id);
             if (!exists) {
                 list.push({
                     ...action.payload,
@@ -128,11 +128,11 @@ const wishlistSlice = createSlice({
             saveAllWishlists(data);
         },
 
-        removeFromWishlist: (state, action: PayloadAction<number>) => {
+        removeFromWishlist: (state, action: PayloadAction<string>) => {
             const data = loadAllWishlists();
 
             const updated = (data[state.userEmail] || []).filter(
-                item => item.id !== action.payload
+                item => item._id !== action.payload
             );
 
             data[state.userEmail] = updated;

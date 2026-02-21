@@ -18,6 +18,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { getImageUrl } from "@/lib/utils";
 
 export default function AdminProductsPage() {
   const dispatch = useDispatch<AppDispatch>();
@@ -83,7 +84,7 @@ export default function AdminProductsPage() {
                     <TableCell>
                       <div className="flex items-center space-x-3">
                         <Image
-                          src={product.image}
+                          src={getImageUrl(product.image)}
                           alt={product.title}
                           width={48}
                           height={48}

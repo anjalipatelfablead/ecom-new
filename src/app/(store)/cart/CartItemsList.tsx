@@ -99,6 +99,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { CartItem } from "@/redux/products/cartSlice";
 import { memo, useCallback } from "react";
+import { getImageUrl } from "@/lib/utils";
 
 interface Props {
     items: CartItem[];
@@ -139,7 +140,7 @@ const SingleCartItem = memo(function SingleCartItem({
                 <div className="flex items-center space-x-4">
                     <div className="relative h-20 w-20 flex-shrink-0">
                         <Image
-                            src={product.image}
+                            src={getImageUrl(product.image)}
                             alt={product.title}
                             fill
                             className="rounded-md object-contain"

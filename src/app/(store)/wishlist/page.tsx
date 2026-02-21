@@ -8,9 +8,9 @@ import Link from "next/link";
 import { toast } from "sonner";
 
 import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "@/redux/store";
+import { RootState, AppDispatch } from "@/redux/store";
 import { removeFromWishlist, clearWishlist, } from "@/redux/products/wishlistSlice";
-import { addToCart } from "@/redux/products/cartSlice";
+import { createCart, updateCart, fetchCart } from "@/redux/products/cartSlice";
 
 import { useEffect } from "react";
 import { setUserWishlist } from "@/redux/products/wishlistSlice";
@@ -19,9 +19,17 @@ import dynamic from "next/dynamic";
 
 export default function WishlistPage() {
 
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const wishlistItems = useSelector(
     (state: RootState) => state.wishlist.items
+  );
+  
+  const { cartId, items } = useSelector(
+    (state: RootState) => state.cart
+  );
+
+  const userId = useSelector(
+    (state: RootState) => state.auth.currentUser?._id
   );
 
   const WishlistGrid = dynamic(
@@ -31,25 +39,121 @@ export default function WishlistPage() {
     }
   );
 
-  const handleRemoveFromWishlist = (id: number, title: string) => {
+  const handleRemoveFromWishlist = (id: string, title: string) => {
     dispatch(removeFromWishlist(id));
     toast.success(`${title} removed from wishlist`);
   };
 
 
-  const handleAddToCart = (item: (typeof wishlistItems)[0]) => {
-    dispatch(addToCart({ product: item, quantity: 1 }));
-    toast.success(`${item.title} added to cart!`);
+  const handleAddToCart = async (item: (typeof wishlistItems)[0]) => {
+    if (!userId) {
+      toast.error("Please login first");
+      return;
+    }
+
+    try {
+      if (!cartId && items.length === 0) {
+        await dispatch(fetchCart(userId)).unwrap();
+      }
+
+      const currentCartId = cartId;
+      const currentItems = items;
+
+      const existingItem = currentItems.find(
+        (cartItem) => cartItem.product._id === item._id
+      );
+
+      let updatedItems;
+
+      if (existingItem) {
+        updatedItems = currentItems.map((cartItem) =>
+          cartItem.product._id === item._id
+            ? { product: item._id!, quantity: existingItem.quantity + 1 }
+            : { product: cartItem.product._id!, quantity: cartItem.quantity }
+        );
+      } else {
+        updatedItems = [
+          ...currentItems.map((cartItem) => ({
+            product: cartItem.product._id!,
+            quantity: cartItem.quantity,
+          })),
+          { product: item._id!, quantity: 1 },
+        ];
+      }
+
+      if (!currentCartId) {
+        await dispatch(
+          createCart({
+            user: userId,
+            items: [{ product: item._id!, quantity: 1 }],
+          })
+        ).unwrap();
+      } else {
+        await dispatch(
+          updateCart({
+            cartId: currentCartId,
+            items: updatedItems,
+          })
+        ).unwrap();
+      }
+
+      await dispatch(fetchCart(userId));
+      toast.success(`${item.title} added to cart!`);
+    } catch (error) {
+      toast.error("Failed to add to cart");
+    }
   };
 
 
-  const handleMoveAllToCart = () => {
-    wishlistItems.forEach((item) => {
-      dispatch(addToCart({ product: item, quantity: 1 }));
-    });
+  const handleMoveAllToCart = async () => {
+    if (!userId) {
+      toast.error("Please login first");
+      return;
+    }
 
-    dispatch(clearWishlist());
-    toast.success(`${wishlistItems.length} items added to cart!`);
+    try {
+      if (!cartId && items.length === 0) {
+        await dispatch(fetchCart(userId)).unwrap();
+      }
+
+      const currentCartId = cartId;
+      const currentItems = items;
+
+      const newItems = wishlistItems.map((item) => ({
+        product: item._id!,
+        quantity: 1,
+      }));
+
+      const allItems = [
+        ...currentItems.map((cartItem) => ({
+          product: cartItem.product._id!,
+          quantity: cartItem.quantity,
+        })),
+        ...newItems,
+      ];
+
+      if (!currentCartId) {
+        await dispatch(
+          createCart({
+            user: userId,
+            items: newItems,
+          })
+        ).unwrap();
+      } else {
+        await dispatch(
+          updateCart({
+            cartId: currentCartId,
+            items: allItems,
+          })
+        ).unwrap();
+      }
+
+      await dispatch(fetchCart(userId));
+      dispatch(clearWishlist());
+      toast.success(`${wishlistItems.length} items added to cart!`);
+    } catch (error) {
+      toast.error("Failed to add items to cart");
+    }
   };
 
   useEffect(() => {

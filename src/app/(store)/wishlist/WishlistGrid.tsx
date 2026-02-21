@@ -5,6 +5,7 @@ import { Trash2, ShoppingCart } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { WishlistItem } from "@/redux/products/wishlistSlice";
+import { getImageUrl } from "@/lib/utils";
 
 // interface WishlistItem {
 //   id: number;
@@ -16,7 +17,7 @@ import { WishlistItem } from "@/redux/products/wishlistSlice";
 
 interface WishlistGridProps {
   wishlistItems: WishlistItem[];
-  handleRemoveFromWishlist: (id: number, title: string) => void;
+  handleRemoveFromWishlist: (id: string, title: string) => void;
   handleAddToCart: (item: WishlistItem) => void;
 }
 
@@ -29,19 +30,20 @@ export default function WishlistGrid({
     <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {wishlistItems.map((item) => (
         <div
-          key={item.id}
+          key={item._id}
           className="relative block aspect-square h-full w-full"
         >
-          <Link href={`/products/${item.id}`}>
+          <Link href={`/products/${item._id}`}>
             <div className="group relative flex h-full w-full items-center justify-center overflow-hidden rounded-lg border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-black">
 
               {/* Product Image */}
               <Image
-                src={item.image}
+                src={getImageUrl(item.image)}
                 alt={item.title}
                 fill
                 className="object-contain transition duration-300 ease-in-out group-hover:scale-105"
                 sizes="(min-width: 768px) 33vw, 100vw"
+                unoptimized
               />
 
               {/* Bottom overlay with product info */}
@@ -66,7 +68,7 @@ export default function WishlistGrid({
                   className="h-8 w-8 bg-white/80 hover:bg-white dark:bg-black/80 dark:hover:bg-black"
                   onClick={(e) => {
                     e.preventDefault();
-                    handleRemoveFromWishlist(item.id, item.title);
+                    handleRemoveFromWishlist(item._id!, item.title);
                   }}
                 >
                   <Trash2 className="h-4 w-4 text-red-500" />

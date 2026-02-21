@@ -82,14 +82,18 @@ export default function AddProductPage() {
   const onSubmit = async (data: ProductFormData) => {
     setLoading(true);
     try {
+      const finalImageUrl = imageUrl || data.image;
+      console.log("Submitting product with image URL:", finalImageUrl);
+      
       const productData = {
         title: data.title,
         price: parseFloat(data.price),
         description: data.description,
         category: data.category,
-        image: imageUrl || data.image,
+        image: finalImageUrl,
       };
       
+      console.log("Product data being sent:", productData);
       await dispatch(createProduct(productData)).unwrap();
       dispatch(resetForm());
       toast.success("Product added successfully");

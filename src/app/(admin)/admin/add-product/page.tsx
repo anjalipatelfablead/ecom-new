@@ -29,6 +29,8 @@ const productSchema = z.object({
   image: z.string().min(1, "Product image is required"),
   description: z.string().min(1, "Description is required"),
   category: z.string().min(1, "Category is required"),
+  rating: z.string().optional(),
+  count: z.string().optional(),
 });
 
 type ProductFormData = z.infer<typeof productSchema>;
@@ -51,6 +53,8 @@ export default function AddProductPage() {
       image: "",
       description: "",
       category: "",
+      rating: "",
+      count: "",
     },
   });
 
@@ -91,6 +95,8 @@ export default function AddProductPage() {
         description: data.description,
         category: data.category,
         image: finalImageUrl,
+        rating: data.rating ? parseFloat(data.rating) : 0,
+        count: data.count ? parseInt(data.count) : 0,
       };
       
       console.log("Product data being sent:", productData);
@@ -171,6 +177,48 @@ export default function AddProductPage() {
                   </FormItem>
                 )}
               />
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="rating"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Rating (Optional)</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          step="0.1"
+                          min="0"
+                          max="5"
+                          placeholder="0"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="count"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Count (Optional)</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min="0"
+                          placeholder="0"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
               <FormField
                 control={form.control}

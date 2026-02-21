@@ -9,11 +9,10 @@ import { toast } from "sonner";
 
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "@/redux/store";
-import { removeFromWishlist, clearWishlist, } from "@/redux/products/wishlistSlice";
+import { removeFromWishlist, clearWishlist, fetchWishlist, addToWishlist } from "@/redux/products/wishlistSlice";
 import { createCart, updateCart, fetchCart } from "@/redux/products/cartSlice";
 
 import { useEffect } from "react";
-import { setUserWishlist } from "@/redux/products/wishlistSlice";
 
 import dynamic from "next/dynamic";
 
@@ -39,9 +38,22 @@ export default function WishlistPage() {
     }
   );
 
-  const handleRemoveFromWishlist = (id: string, title: string) => {
-    dispatch(removeFromWishlist(id));
-    toast.success(`${title} removed from wishlist`);
+  const handleRemoveFromWishlist = async (id: string, title: string) => {
+    if (!userId) {
+      toast.error("Please login first");
+      return;
+    }
+    try {
+      await dispatch(
+        removeFromWishlist({
+          userId,
+          productId: id,
+        })
+      ).unwrap();
+      toast.success(`${title} removed from wishlist`);
+    } catch (error) {
+      toast.error("Failed to remove from wishlist");
+    }
   };
 
 
@@ -149,7 +161,7 @@ export default function WishlistPage() {
       }
 
       await dispatch(fetchCart(userId));
-      dispatch(clearWishlist());
+      await dispatch(clearWishlist(userId)).unwrap();
       toast.success(`${wishlistItems.length} items added to cart!`);
     } catch (error) {
       toast.error("Failed to add items to cart");
@@ -157,14 +169,10 @@ export default function WishlistPage() {
   };
 
   useEffect(() => {
-    const user = sessionStorage.getItem("loggedUser");
-    if (user) {
-      const { email } = JSON.parse(user);
-      dispatch(setUserWishlist(email));
-    } else {
-      dispatch(setUserWishlist("guest"));
+    if (userId) {
+      dispatch(fetchWishlist(userId));
     }
-  }, [dispatch]);
+  }, [userId, dispatch]);
 
 
   return (

@@ -261,7 +261,10 @@
 
       /* MOVE TO WISHLIST */
       const handleMoveToWishlist = async () => {
-        if (!deleteModal?.productId || !cartId) return;
+        if (!deleteModal?.productId || !cartId || !userId) {
+          toast.error("Please login first");
+          return;
+        }
 
         const item = items.find(
           (i) => i.product._id === deleteModal.productId
@@ -269,24 +272,33 @@
 
         if (!item) return;
 
-        dispatch(addToWishlist(item.product));
+        try {
+          await dispatch(
+            addToWishlist({
+              userId,
+              productId: item.product._id!,
+            })
+          ).unwrap();
 
-        const updatedItems = items
-          .filter((i) => i.product._id !== deleteModal.productId)
-          .map((i) => ({
-            product: i.product._id!,
-            quantity: i.quantity,
-          }));
+          const updatedItems = items
+            .filter((i) => i.product._id !== deleteModal.productId)
+            .map((i) => ({
+              product: i.product._id!,
+              quantity: i.quantity,
+            }));
 
-        await dispatch(
-          updateCart({
-            cartId,
-            items: updatedItems,
-          })
-        );
+          await dispatch(
+            updateCart({
+              cartId,
+              items: updatedItems,
+            })
+          );
 
-        toast.success(`${item.product.title} moved to wishlist`);
-        setDeleteModal(null);
+          toast.success(`${item.product.title} moved to wishlist`);
+          setDeleteModal(null);
+        } catch (error) {
+          toast.error("Failed to move to wishlist");
+        }
       };
 
       /* UPDATE QUANTITY */

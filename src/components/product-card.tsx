@@ -120,9 +120,22 @@ export default function ProductCard({ product }: ProductCardProps) {
     }
   };
 
-  const handleAddToWishlist = () => {
-    dispatch(addToWishlist(product));
-    toast.success(`${product.title} added to wishlist`);
+  const handleAddToWishlist = async () => {
+    if (!userId) {
+      toast.error("Please login first");
+      return;
+    }
+    try {
+      await dispatch(
+        addToWishlist({
+          userId,
+          productId: product._id!,
+        })
+      ).unwrap();
+      toast.success(`${product.title} added to wishlist`);
+    } catch (error) {
+      toast.error("Failed to add to wishlist");
+    }
   };
 
   return (

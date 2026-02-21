@@ -17,8 +17,8 @@ import { getImageUrl } from "@/lib/utils";
 
 interface WishlistGridProps {
   wishlistItems: WishlistItem[];
-  handleRemoveFromWishlist: (id: string, title: string) => void;
-  handleAddToCart: (item: WishlistItem) => void;
+  handleRemoveFromWishlist: (id: string, title: string) => Promise<void>;
+  handleAddToCart: (item: WishlistItem) => Promise<void>;
 }
 
 export default function WishlistGrid({

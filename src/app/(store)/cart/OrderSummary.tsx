@@ -1,64 +1,3 @@
-// "use client";
-
-// import { Button } from "@/components/ui/button";
-// import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-// import { ArrowRight } from "lucide-react";
-// import Link from "next/link";
-// import { CartItem } from "@/redux/products/cartSlice";
-
-// interface Props {
-//     items: CartItem[];
-// }
-
-// export default function OrderSummary({ items }: Props) {
-//     const totalPrice = items.reduce(
-//         (sum, item) => sum + item.price * item.quantity,
-//         0
-//     );
-
-//     return (
-//         <Card>
-//             <CardHeader>
-//                 <CardTitle>Order Summary</CardTitle>
-//             </CardHeader>
-//             <CardContent className="space-y-4">
-//                 <div className="flex justify-between">
-//                     <span>
-//                         Subtotal (
-//                         {items.reduce((sum, item) => sum + item.quantity, 0)} items)
-//                     </span>
-//                     <span>${totalPrice.toFixed(2)}</span>
-//                 </div>
-
-//                 <div className="flex justify-between">
-//                     <span>Shipping</span>
-//                     <span>{totalPrice >= 100 ? "Free" : "$9.99"}</span>
-//                 </div>
-
-//                 <div className="flex justify-between font-bold">
-//                     <span>Total</span>
-//                     <span>
-//                         $
-//                         {(
-//                             totalPrice +
-//                             (totalPrice >= 100 ? 0 : 9.99)
-//                         ).toFixed(2)}
-//                     </span>
-//                 </div>
-
-//                 <Link href="/checkout">
-//                     <Button className="w-full">
-//                         Proceed to Checkout
-//                         <ArrowRight className="ml-2 h-4 w-4" />
-//                     </Button>
-//                 </Link>
-//             </CardContent>
-//         </Card>
-//     );
-// }
-
-
-
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -76,7 +15,7 @@ export default function OrderSummary({ items }: Props) {
     // Memoize all calculations - only recalculate when items change
     const summary = useMemo(() => {
         const totalPrice = items.reduce(
-            (sum, item) => sum + item.price * item.quantity,
+            (sum, item) => sum + item.product.price * item.quantity,
             0
         );
 

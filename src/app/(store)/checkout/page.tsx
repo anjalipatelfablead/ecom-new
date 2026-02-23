@@ -19,17 +19,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useSelector, useDispatch } from "react-redux";
-import { RootState } from "@/redux/store";
-import { clearUserCart } from "@/redux/products/cartSlice";
+import { RootState, AppDispatch } from "@/redux/store";
+import { deleteCart } from "@/redux/products/cartSlice";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CreditCard, Lock, Truck } from "lucide-react";
+import { Truck } from "lucide-react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod";
 
-import { addOrder } from "@/redux/products/orderSlice";
+import { createOrder } from "@/redux/products/orderSlice";
+import router from "next/router";
 
 const checkoutFormSchema = z.object({
   // Shipping Information
@@ -55,13 +55,14 @@ const checkoutFormSchema = z.object({
 type CheckoutFormValues = z.infer<typeof checkoutFormSchema>;
 
 export default function CheckoutPage() {
-  const dispatch = useDispatch();
-  const items = useSelector((state: RootState) => state.cart.items);
+  const dispatch = useDispatch<AppDispatch>();
+  const { items, cartId } = useSelector((state: RootState) => state.cart);
+  const userId = useSelector((state: RootState) => state.auth.currentUser?._id);
+  
   const totalPrice = items.reduce(
-    (sum, item) => sum + item.price * item.quantity,
+    (sum, item) => sum + item.product.price * item.quantity,
     0
   );
-  const router = useRouter();
 
   const sessionUser =
     typeof window !== "undefined"
@@ -82,63 +83,60 @@ export default function CheckoutPage() {
 
       // cardNumber: "",
       // expiryDate: "",
-      // cvv: "",
+      // cvv: "";
       // cardholderName: "",
     },
   });
 
-  const userEmail = sessionUser?.email;
-
   const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/test_8x2aEZcmdaVCcc84Dxbsc02";
 
   const onSubmit = async (values: CheckoutFormValues) => {
-    if (!userEmail) {
+    if (!userId) {
       toast.error("Please login to continue");
       return;
     }
 
-    const orderId = `ORD-${Date.now()}`;
+    const shippingCost = totalPrice >= 100 ? 0 : 9.99;
+    const tax = totalPrice * 0.08;
+    const finalTotal = totalPrice + shippingCost + tax;
 
-    const order = {
-      id: orderId,
-      date: new Date().toISOString(),
-      status: "processing" as const,
-      total: finalTotal,
-      items,
-      trackingNumber: null,
-      estimatedDelivery: new Date(
-        Date.now() + 5 * 24 * 60 * 60 * 1000
-      ).toISOString(),
-    };
+    const orderItems = items.map((item) => ({
+      product: item.product._id,
+      quantity: item.quantity,
+      price: item.product.price,
+    }));
 
-    dispatch(addOrder({ email: userEmail, order }));
+    try {
+      await dispatch(
+        createOrder({
+          user: userId,
+          items: orderItems,
+          totalAmount: finalTotal,
+          shippingAddress: {
+            username: values.username,
+            email: values.email,
+            phone: values.phone,
+            address: values.address,
+            city: values.city,
+            state: values.state,
+            zipCode: values.zipCode,
+            country: values.country,
+          },
+          paymentMethod: "stripe",
+        })
+      ).unwrap();
 
-    dispatch(clearUserCart(userEmail));
+      toast.success("Order created successfully!");
 
-    window.location.href = STRIPE_PAYMENT_LINK;
+      if (cartId) {
+        await dispatch(deleteCart(cartId));
+      }
+
+      window.location.href = STRIPE_PAYMENT_LINK;
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to create order");
+    }
   };
-
-  // const onSubmit = async (values: CheckoutFormValues) => {
-  //   console.log("Form values:", values);
-  //   try {
-  //     // Simulate API call
-  //     toast.loading("Processing your order...");
-
-  //     // Simulate processing time
-  //     await new Promise((resolve) => setTimeout(resolve, 2000));
-
-  //     // Clear the cart
-  //     dispatch(clearUserCart());
-
-  //     toast.success("Order placed successfully!");
-
-  //     // Redirect to success page
-  //     router.push("/checkout/success");
-  //   } catch (error) {
-  //     console.error("Checkout error:", error);
-  //     toast.error("Failed to process order. Please try again.");
-  //   }
-  // };
 
   const shippingCost = totalPrice >= 100 ? 0 : 9.99;
   const tax = totalPrice * 0.08;
@@ -417,11 +415,11 @@ export default function CheckoutPage() {
                 {/* Order Items */}
                 <div className="space-y-3">
                   {items.map((item) => (
-                    <div key={item.id} className="flex items-center space-x-3">
+                    <div key={item.product._id} className="flex items-center space-x-3">
                       <div className="relative h-12 w-12 flex-shrink-0">
                         <Image
-                          src={item.image}
-                          alt={item.title}
+                          src={item.product.image}
+                          alt={item.product.title}
                           fill
                           className="rounded-md object-cover"
                           unoptimized
@@ -429,14 +427,14 @@ export default function CheckoutPage() {
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-medium">
-                          {item.title}
+                          {item.product.title}
                         </p>
                         <p className="text-muted-foreground text-xs">
-                          ${item.price.toFixed(2)} × {item.quantity}
+                          ${item.product.price.toFixed(2)} × {item.quantity}
                         </p>
                       </div>
                       <div className="text-sm font-medium">
-                        ${(item.price * item.quantity).toFixed(2)}
+                        ${(item.product.price * item.quantity).toFixed(2)}
                       </div>
                     </div>
                   ))}

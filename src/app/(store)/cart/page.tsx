@@ -1,194 +1,29 @@
-  // "use client";
+  "use client";
 
-  // import { Button } from "@/components/ui/button";
-  // import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-  // // import { useCart } from "@/lib/cart-context";
-  // import { ArrowRight, Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
-  // import Image from "next/image";
-  // import Link from "next/link";
-  // import { toast } from "sonner";
+  import { Button } from "@/components/ui/button";
+  import { ShoppingBag } from "lucide-react";
+  import Link from "next/link";
+  import { toast } from "sonner";
 
-  // import { useDispatch, useSelector } from "react-redux";
-  // import { RootState } from "@/redux/store";
-  // import { removeFromCart, updateQuantity, clearUserCart, setUserCart, } from "@/redux/products/cartSlice";
-  // // import { deleteCart, updateCart, clearCartState, } from "@/redux/products/cartSlice";
+  import { useDispatch, useSelector } from "react-redux";
+  import { RootState, AppDispatch } from "@/redux/store";
+  import {
+    fetchCart,
+    updateCart,
+    deleteCart,
+  } from "@/redux/products/cartSlice";
 
-  // import { useEffect, useState } from "react";
-  // import { addToWishlist } from "@/redux/products/wishlistSlice";
-  // // import { addToCart } from "@/redux/cart/cartSlice";
+  import { useEffect, useState } from "react";
+  import { addToWishlist } from "@/redux/products/wishlistSlice";
+  import dynamic from "next/dynamic";
 
-  // import dynamic from "next/dynamic";
+  const CartItemsList = dynamic(() => import("./CartItemsList"), {
+    loading: () => <p>Loading cart...</p>,
+  });
 
-  // const CartItemsList = dynamic(() => import("./CartItemsList"), { loading: () => <p>Loading cart...</p> });
-
-  // const OrderSummary = dynamic(() => import("./OrderSummary"), { loading: () => <p>Loading Order Summary...</p> })
-  // export default function CartPage() {
-  //   // const { items, removeFromCart, updateQuantity, totalPrice, clearCart } =useCart();
-  //   const [deleteModal, setDeleteModal] = useState<{
-  //     open: boolean;
-  //     itemId: number | null;
-  //     itemTitle: string;
-  //   } | null>(null);
-
-  //   const dispatch = useDispatch();
-  //   const items = useSelector((state: RootState) => state.cart.items);
-
-  //   useEffect(() => {
-  //     const user = sessionStorage.getItem("loggedUser");
-  //     if (user) {
-  //       const { email } = JSON.parse(user);
-  //       dispatch(setUserCart(email));
-  //     } else {
-  //       dispatch(setUserCart("guest"));
-  //     }
-  //   }, [dispatch]);
-
-
-
-  //   const totalPrice = items.reduce(
-  //     (sum, item) => sum + item.price * item.quantity,
-  //     0
-  //   );
-
-  //   // const handleRemoveItem = (id: number, title: string) => {
-  //   //   dispatch(removeFromCart(id));
-  //   //   toast.success(`${title} removed from cart`);
-  //   // };
-
-  //   const handleClearCart = () => {
-  //     dispatch(clearUserCart());
-  //     toast.success("Cart cleared");
-  //   };
-
-  //   const handleDeleteClick = (id: number, title: string) => {
-  //     setDeleteModal({ open: true, itemId: id, itemTitle: title });
-  //   };
-
-  //   const handleCancelDelete = () => {
-  //     setDeleteModal(null);
-  //   };
-
-  //   const handleConfirmDelete = () => {
-  //     if (deleteModal?.itemId !== null && deleteModal?.itemId !== undefined) {
-  //       dispatch(removeFromCart(deleteModal.itemId));
-  //       toast.success(`${deleteModal.itemTitle || "Item"} removed from cart`);
-  //     }
-  //     setDeleteModal(null);
-  //   };
-
-  //   const handleMoveToWishlist = () => {
-  //     if (deleteModal?.itemId !== null && deleteModal?.itemId !== undefined) {
-  //       const item = items.find(i => i.id === deleteModal.itemId);
-  //       if (item) {
-  //         dispatch(addToWishlist(item));
-  //         dispatch(removeFromCart(item.id));
-  //         toast.success(`${item.title} moved to wishlist`);
-  //       }
-  //     }
-  //     setDeleteModal(null);
-  //   };
-
-  //   if (items.length === 0) {
-  //     return (
-  //       <div className="container mx-auto px-4 py-8">
-  //         <div className="space-y-6 text-center">
-  //           <ShoppingBag className="text-muted-foreground mx-auto h-24 w-24" />
-  //           <div>
-  //             <h1 className="mb-2 text-3xl font-bold">Your cart is empty</h1>
-  //             <p className="text-muted-foreground mb-6">
-  //               Looks like you haven&apos;t added any items to your cart yet.
-  //             </p>
-  //             <Link href="/">
-  //               <Button size="lg">Continue Shopping</Button>
-  //             </Link>
-  //           </div>
-  //         </div>
-  //       </div>
-  //     );
-  //   }
-
-  //   return (
-
-  //     <>
-  //       <div className="container mx-auto px-4 py-8">
-  //         <h1 className="mb-8 text-3xl font-bold">Shopping Cart</h1>
-
-  //         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-
-
-  //           <div className="lg:col-span-2">
-  //             <CartItemsList
-  //               items={items}
-  //               onDeleteClick={handleDeleteClick}
-  //               onUpdateQuantity={(id, qty) =>
-  //                 dispatch(updateQuantity({ productId: id, quantity: qty }))
-  //               }
-  //             />
-  //           </div>
-
-  //           <div>
-  //             <OrderSummary items={items} />
-  //           </div>
-
-  //         </div>
-  //       </div>
-
-  //       {deleteModal?.open && (
-  //         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">
-  //           {/* <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-xs"> */}
-  //           <div className="bg-white rounded-lg p-6 shadow-lg w-150">
-  //             <h2 className="text-lg font-semibold mb-4">
-  //               What do you want to do with "{deleteModal?.itemTitle || ""}"?
-  //             </h2>
-  //             <div className="flex justify-end gap-3">
-  //               <Button variant="outline" onClick={handleCancelDelete}>
-  //                 Cancel
-  //               </Button>
-  //               <Button variant="destructive" onClick={handleConfirmDelete}>
-  //                 Delete
-  //               </Button>
-  //               <Button variant="secondary" onClick={handleMoveToWishlist}>
-  //                 Add to Wishlist
-  //               </Button>
-  //             </div>
-  //           </div>
-  //         </div>
-  //       )}
-
-  //     </>
-  //   );
-  // }
-
-
-
-
-
-    "use client";
-
-    import { Button } from "@/components/ui/button";
-    import { ShoppingBag } from "lucide-react";
-    import Link from "next/link";
-    import { toast } from "sonner";
-
-    import { useDispatch, useSelector } from "react-redux";
-    import { RootState, AppDispatch } from "@/redux/store";
-    import {
-      fetchCart,
-      updateCart,
-      deleteCart,
-    } from "@/redux/products/cartSlice";
-
-    import { useEffect, useState } from "react";
-    import { addToWishlist } from "@/redux/products/wishlistSlice";
-    import dynamic from "next/dynamic";
-
-    const CartItemsList = dynamic(() => import("./CartItemsList"), {
-      loading: () => <p>Loading cart...</p>,
-    });
-
-    const OrderSummary = dynamic(() => import("./OrderSummary"), {
-      loading: () => <p>Loading Order Summary...</p>,
-    });
+  const OrderSummary = dynamic(() => import("./OrderSummary"), {
+    loading: () => <p>Loading Order Summary...</p>,
+  });
 
     export default function CartPage() {
       const dispatch = useDispatch<AppDispatch>();
@@ -353,7 +188,7 @@
               </div>
 
               <div>
-                {/* <OrderSummary items={items} totalPrice={totalPrice} /> */}
+                <OrderSummary items={items} />
                 <Button
                   variant="destructive"
                   className="w-full mt-4"

@@ -124,8 +124,11 @@ export default function ProductDetailsPage() {
   };
 
   const handleAddToWishlist = () => {
-    if (!product) return;
-    dispatch(addToWishlist(product));
+    if (!product || !userId) {
+      toast.error("Please login first");
+      return;
+    }
+    dispatch(addToWishlist({ userId, productId: product._id }));
     toast.success(`${product.title} added to wishlist `);
   };
 

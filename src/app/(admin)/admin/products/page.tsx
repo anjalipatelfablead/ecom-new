@@ -109,9 +109,14 @@ export default function AdminProductsPage() {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center space-x-2">
-                        <Button variant="ghost" size="sm">
+                        {/* <Button variant="ghost" size="sm">
                           <Edit className="h-4 w-4" />
-                        </Button>
+                        </Button> */}
+                        <Link href={`/admin/edit-product/${product._id}`}>
+                          <Button variant="ghost" size="sm">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </Link>
                         <Button
                           variant="ghost"
                           size="sm"

@@ -166,6 +166,25 @@ export const addProduct = createAsyncThunk<
 });
 
 
+export const updateProduct = createAsyncThunk<
+  Product,
+  { id: string; data: Omit<Product, "_id"> },
+  { rejectValue: string }
+>(
+  "products/updateProduct",
+  async ({ id, data }, { rejectWithValue }) => {
+    try {
+      const response = await axios.put(
+        `http://localhost:3030/ecom/product/${id}`,
+        data
+      );
+      return response.data.data;
+    } catch (error) {
+      return rejectWithValue("Failed to update product");
+    }
+  }
+);
+
 
 const productSlice = createSlice({
   name: "products",
@@ -173,6 +192,7 @@ const productSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
+      // ---- get all product ---
       .addCase(fetchProducts.pending, (state) => {
         state.status = "loading";
       })
@@ -188,7 +208,7 @@ const productSlice = createSlice({
         state.error = action.payload || "Failed to fetch products";
       })
 
-
+      // get product by id ----
       .addCase(fetchProductById.pending, (state) => {
         state.status = "loading";
         state.selectedProduct = null;
@@ -205,6 +225,7 @@ const productSlice = createSlice({
         state.error = action.payload || "Failed to fetch product";
       })
 
+      // ---- delete product ------
       .addCase(deleteProduct.fulfilled, (state, action: PayloadAction<string>) => {
         state.items = state.items.filter((product) => product._id !== action.payload);
       })
@@ -213,6 +234,7 @@ const productSlice = createSlice({
         state.error = action.payload || "Failed to delete product";
       })
 
+      // --- add product -----
       .addCase(addProduct.pending, (state) => {
         state.status = "loading";
       })
@@ -223,7 +245,25 @@ const productSlice = createSlice({
       .addCase(addProduct.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload || "Failed to add product";
-      });
+      })
+
+      // ------ update prodct----
+
+      .addCase(updateProduct.fulfilled, (state, action: PayloadAction<Product>) => {
+        const index = state.items.findIndex(
+          (p) => p._id === action.payload._id
+        );
+
+        if (index !== -1) {
+          state.items[index] = action.payload;
+        }
+
+        state.selectedProduct = action.payload;
+      })
+      .addCase(updateProduct.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload || "Failed to update product";
+      })
   },
 });
 

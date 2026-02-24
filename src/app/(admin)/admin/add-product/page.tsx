@@ -569,14 +569,14 @@ export default function AddProductPage() {
                           <FormLabel className="mt-5">Status</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
-                              <SelectTrigger>
+                              <SelectTrigger className="w-full">
                                 <SelectValue placeholder="Select status" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
                               <SelectItem value="Active">Active</SelectItem>
                               <SelectItem value="Inactive">Inactive</SelectItem>
-                              <SelectItem value="Out of Stock">Out of Stock</SelectItem>
+                              {/* <SelectItem value="Out of Stock">Out of Stock</SelectItem> */}
                             </SelectContent>
                           </Select>
                           <FormMessage />

@@ -200,6 +200,18 @@ export default function ProductDetailsPage() {
             <p className="text-primary mb-4 text-4xl font-bold">
               ${product.price.toFixed(2)}
             </p>
+            <div>
+              <Badge
+                className={`${(product.stock ?? 0) > 0
+                  ? "bg-green-500 text-white"
+                  : "bg-red-500 text-white"
+                  } rounded-full px-3 py-1`}
+              >
+                {(product.stock ?? 0) > 0
+                  ? `In Stock: ${product.stock}`
+                  : "Out of Stock"}
+              </Badge>
+            </div>
           </div>
 
           {product.rating && (
@@ -254,13 +266,25 @@ export default function ProductDetailsPage() {
 
                 <div className="space-y-3 pt-4">
                   <div className="grid grid-cols-2 gap-3 pt-4">
-                    <Button
+                    {/* <Button
                       onClick={handleAddToCart}
                       className="w-full"
                       size="lg"
                     >
                       <ShoppingCart className="mr-2 h-4 w-4" />
                       Add to Cart - ₹ {(product.price * quantity).toFixed(2)}
+                    </Button> */}
+
+                    <Button
+                      onClick={handleAddToCart}
+                      className="w-full cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
+                      size="lg"
+                      disabled={(product.stock ?? 0) === 0}
+                    >
+                      <ShoppingCart className="mr-2 h-4 w-4" />
+                      {(product.stock ?? 0) === 0
+                        ? "Out of Stock"
+                        : `Add to Cart - ₹ ${(product.price * quantity).toFixed(2)}`}
                     </Button>
 
                     <Button

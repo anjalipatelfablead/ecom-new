@@ -47,11 +47,18 @@ export default function ProductList() {
         </Link> */}
       </div>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {products.map((product) =>
+        {/* {products.map((product) =>
           product ? <ProductCard key={product._id} product={product} /> : null
-        )}
+        )} */}
+
+        {products
+          .filter((product) => product?.status === "Active")
+          .map((product) =>
+            product ? <ProductCard key={product._id} product={product} /> : null
+          )}
       </div>
-      {products.length === 0 && (
+      {/* {products.length === 0 && ( */}
+      {products.filter((product) => product?.status === "Active").length === 0 && (
         <div className="py-12 text-center">
           <p className="text-muted-foreground">No products available at the moment.</p>
         </div>

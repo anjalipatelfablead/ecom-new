@@ -30,7 +30,7 @@
 //     toast.success(`${product.title} added to wishlist`);
 //   };
 
-"use client";
+// "use client";
 
 import { Product } from "@/redux/products/productSlice";
 import { Badge } from "@/components/ui/badge";
@@ -221,6 +221,30 @@ export default function ProductCard({ product }: ProductCardProps) {
               <Heart className="h-5 w-5 text-white " />
             </Button>
           </div>
+
+          {/* Stock badge - bottom right */}
+          {/* <div className="absolute bottom-2 right-2">
+            <Badge
+              className="bg-green-400/80 text-black backdrop-blur-md dark:bg-black/70 dark:text-white"
+              variant="secondary"
+            >
+              Stock: {product.stock}
+            </Badge>
+          </div> */}
+
+          <div className="absolute bottom-3 right-2 ">
+            <Badge
+              className={`${(product.stock ?? 0) > 0
+                  ? "bg-green-500/90 text-white"
+                  : "bg-red-500/90 text-white"
+                } backdrop-blur-md border-0 h-10 rounded-full px-3 py-2`}
+            >
+              {(product.stock ?? 0) > 0
+                ? `In Stock: ${product.stock ?? 0}`
+                : "Out of Stock"}
+            </Badge>
+          </div>
+
         </div>
       </Link>
     </div>

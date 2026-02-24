@@ -10,6 +10,8 @@ export interface User {
   username: string;
   email: string;
   role: string;
+  phone?: string;  
+  address?: string;
 }
 
 interface AuthState {
@@ -85,6 +87,37 @@ export const registerUser = createAsyncThunk(
   }
 );
 
+// ================= UPDATE USER =================
+
+export const updateUser = createAsyncThunk(
+  "auth/updateUser",
+  async (
+    {
+      userId,
+      formData,
+    }: {
+      userId: string;
+      formData: {
+        username?: string;
+        email?: string;
+        phone?: string;
+        address?: string;
+        dateofbirth?: string;
+      };
+    },
+    thunkAPI
+  ) => {
+    try {
+      const response = await axios.put(`${API_URL}/${userId}`, formData);
+      return response.data;
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.message || "Update failed"
+      );
+    }
+  }
+);
+
 // ================= SLICE =================
 
 const authSlice = createSlice({
@@ -98,6 +131,14 @@ const authSlice = createSlice({
       if (typeof window !== "undefined") {
         sessionStorage.removeItem("token");
         sessionStorage.removeItem("user");
+      }
+    },
+    updateCurrentUser: (state, action: PayloadAction<Partial<User>>) => {
+      if (state.currentUser) {
+        state.currentUser = { ...state.currentUser, ...action.payload };
+        if (typeof window !== "undefined") {
+          sessionStorage.setItem("user", JSON.stringify(state.currentUser));
+        }
       }
     },
   },
@@ -139,9 +180,36 @@ const authSlice = createSlice({
       .addCase(registerUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
+      })
+
+      // UPDATE USER
+      .addCase(updateUser.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateUser.fulfilled, (state, action: PayloadAction<any>) => {
+        state.loading = false;
+        // Update current user data if the updated user is the current user
+        if (state.currentUser && action.payload.updateduser) {
+          state.currentUser = {
+            ...state.currentUser,
+            ...action.payload.updateduser,
+          };
+          // Update sessionStorage
+          if (typeof window !== "undefined") {
+            sessionStorage.setItem(
+              "user",
+              JSON.stringify(state.currentUser)
+            );
+          }
+        }
+      })
+      .addCase(updateUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
       });
   },
 });
 
-export const { logout } = authSlice.actions;
+export const { logout, updateCurrentUser } = authSlice.actions;
 export default authSlice.reducer;

@@ -20,10 +20,13 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/redux/store";
+import { updateUser, updateCurrentUser } from "@/redux/auth/authSlice";
+import { useEffect } from "react";
 
 const profileFormSchema = z.object({
-  firstName: z.string().min(2, "First name must be at least 2 characters"),
-  lastName: z.string().min(2, "Last name must be at least 2 characters"),
+  username: z.string().min(2, "Username must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
   phone: z.string().min(10, "Phone number must be at least 10 digits"),
   address: z.string().min(5, "Address must be at least 5 characters"),
@@ -37,35 +40,90 @@ type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 export default function ProfilePage() {
   const { isAdmin } = useAuth();
+  const dispatch = useDispatch<AppDispatch>();
+  const { currentUser, loading } = useSelector((state: RootState) => state.auth);
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
-      firstName: isAdmin ? "Admin" : "John",
-      lastName: isAdmin ? "User" : "Doe",
-      email: isAdmin ? "admin@ecomstore.com" : "john.doe@example.com",
-      phone: "(555) 123-4567",
-      address: "123 Main Street",
-      city: "New York",
-      state: "NY",
-      zipCode: "10001",
-      bio: isAdmin ? "Administrator of EcomStore" : "Customer since 2024",
+      username: "",
+      email: "",
+      phone: "",
+      address: "",
+      city: "",
+      state: "",
+      zipCode: "",
+      bio: "",
     },
   });
 
+  // Load user data from sessionStorage/currentUser on mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedUser = sessionStorage.getItem("user");
+      const loggedUser = sessionStorage.getItem("loggedUser");
+
+      let userData = null;
+      if (storedUser) {
+        userData = JSON.parse(storedUser);
+      } else if (loggedUser) {
+        userData = JSON.parse(loggedUser);
+      } else if (currentUser) {
+        userData = currentUser;
+      }
+
+      if (userData) {
+        // Parse address if it exists (backend stores it as a single string)
+        const addressParts = userData.address ? userData.address.split(", ") : ["", "", ""];
+
+        form.reset({
+          username: userData.username || "",
+          email: userData.email || "",
+          phone: userData.phone || "",
+          address: addressParts[0] || "",
+          city: addressParts[1] || "",
+          state: addressParts[2] || "",
+          zipCode: userData.zipCode || "",
+          bio: userData.bio || "",
+        });
+      }
+    }
+  }, [currentUser, form]);
+
   const onSubmit = async (values: ProfileFormValues) => {
+    if (!currentUser?._id) {
+      toast.error("User not found. Please login again.");
+      return;
+    }
+
     try {
-      // Simulate API call
-      toast.loading("Updating profile...");
+      // Combine address fields for backend
+      const fullAddress = `${values.address}, ${values.city}, ${values.state}`;
 
-      // Simulate processing time
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await dispatch(
+        updateUser({
+          userId: currentUser._id,
+          formData: {
+            username: values.username,
+            email: values.email,
+            phone: values.phone,
+            address: fullAddress,
+          },
+        })
+      ).unwrap();
 
-      console.log("Profile updated:", values);
+      // Update the currentUser in Redux with the new values
+      dispatch(updateCurrentUser({
+        username: values.username,
+        email: values.email,
+        phone: values.phone,
+        address: fullAddress,
+      }));
+
       toast.success("Profile updated successfully!");
     } catch (error) {
       console.error("Profile update error:", error);
-      toast.error("Failed to update profile. Please try again.");
+      toast.error(error instanceof Error ? error.message : "Failed to update profile. Please try again.");
     }
   };
 
@@ -99,7 +157,7 @@ export default function ProfilePage() {
                   <User className="text-primary h-12 w-12" />
                 </div>
                 <h3 className="text-xl font-semibold">
-                  {form.watch("firstName")} {form.watch("lastName")}
+                  {form.watch("username")}
                 </h3>
                 <p className="text-muted-foreground">{form.watch("email")}</p>
                 {isAdmin && (
@@ -178,25 +236,12 @@ export default function ProfilePage() {
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                       <FormField
                         control={form.control}
-                        name="firstName"
+                        name="username"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>First Name</FormLabel>
+                            <FormLabel>Username</FormLabel>
                             <FormControl>
-                              <Input placeholder="John" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="lastName"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Last Name</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Doe" {...field} />
+                              <Input placeholder="johndoe" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>

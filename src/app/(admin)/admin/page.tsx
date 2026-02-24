@@ -5,41 +5,79 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Package, Plus, TrendingUp, Users } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+// import { useEffect, useState } from "react";
+
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/redux/store";
+import { fetchProducts } from "@/redux/products/productSlice";
+import { useEffect } from "react";
 
 export default function AdminDashboard() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  // const [products, setProducts] = useState<Product[]>([]);
+  // const [loading, setLoading] = useState(true);
+
+  // useEffect(() => {
+  //   async function fetchProducts() {
+  //     try {
+  //       const response = await fetch("/api/products");
+  //       if (response.ok) {
+  //         const data = await response.json();
+  //         setProducts(data);
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching products:", error);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   }
+
+  //   fetchProducts();
+  // }, []);
+
+  // const totalProducts = products.length;
+  // const totalValue = products.reduce((sum, product) => sum + product.price, 0);
+  // const avgPrice = totalProducts > 0 ? totalValue / totalProducts : 0;
+
+  // if (loading) {
+  //   return (
+  //     <div className="flex h-64 items-center justify-center">
+  //       <div className="text-muted-foreground">Loading dashboard...</div>
+  //     </div>
+  //   );
+  // }
+
+  const dispatch = useDispatch<AppDispatch>();
+
+  const { items: products, status } = useSelector(
+    (state: RootState) => state.products
+  );
 
   useEffect(() => {
-    async function fetchProducts() {
-      try {
-        const response = await fetch("/api/products");
-        if (response.ok) {
-          const data = await response.json();
-          setProducts(data);
-        }
-      } catch (error) {
-        console.error("Error fetching products:", error);
-      } finally {
-        setLoading(false);
-      }
+    if (status === "idle") {
+      dispatch(fetchProducts());
     }
+  }, [status, dispatch]);
 
-    fetchProducts();
-  }, []);
-
-  const totalProducts = products.length;
-  const totalValue = products.reduce((sum, product) => sum + product.price, 0);
-  const avgPrice = totalProducts > 0 ? totalValue / totalProducts : 0;
-
-  if (loading) {
+  if (status === "loading") {
     return (
       <div className="flex h-64 items-center justify-center">
         <div className="text-muted-foreground">Loading dashboard...</div>
       </div>
     );
   }
+
+  const totalProducts = products.length;
+
+  const totalValue = products.reduce(
+    (sum, product) => sum + product.price,
+    0
+  );
+
+  const avgPrice = totalProducts > 0 ? totalValue / totalProducts : 0;
+
+  const totalCategories = new Set(
+    products.map((p) => p.category).filter(Boolean)
+  ).size;
 
   return (
     <div className="space-y-6">
@@ -97,7 +135,8 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {new Set(products.map((p) => p.category).filter(Boolean)).size}
+              {/* {new Set(products.map((p) => p.category).filter(Boolean)).size} */}
+              {totalCategories}
             </div>
             <p className="text-muted-foreground text-xs">Product categories</p>
           </CardContent>
@@ -135,7 +174,7 @@ export default function AdminDashboard() {
             ) : (
               <div className="space-y-2">
                 {products.slice(-3).map((product) => (
-                  <div key={product.id} className="flex items-center space-x-3">
+                  <div key={product._id} className="flex items-center space-x-3">
                     <div className="bg-muted flex h-8 w-8 items-center justify-center rounded-md">
                       <Package className="h-4 w-4" />
                     </div>

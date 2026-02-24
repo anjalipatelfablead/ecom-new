@@ -30,6 +30,11 @@ const sidebarItems = [
     href: "/admin/userlist",
     icon: Users,
   },
+  {
+    title: "Order List",
+    href: "/admin/orders",
+    icon: Users,
+  },
 ];
 
 export default function AdminSidebar() {

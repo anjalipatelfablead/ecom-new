@@ -25,6 +25,7 @@ import { AppDispatch, RootState } from "@/redux/store";
 import { updateUser, updateCurrentUser } from "@/redux/auth/authSlice";
 import { useEffect } from "react";
 import { getOrders } from "@/redux/products/orderSlice";
+import { fetchWishlist } from "@/redux/products/wishlistSlice";
 
 const profileFormSchema = z.object({
   username: z.string().min(2, "Username must be at least 2 characters"),
@@ -44,6 +45,8 @@ export default function ProfilePage() {
   const dispatch = useDispatch<AppDispatch>();
   const { currentUser, loading } = useSelector((state: RootState) => state.auth);
   const { orders } = useSelector((state: RootState) => state.order);
+
+  const { items: wishlistItems } = useSelector((state: RootState) => state.wishlist);
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -92,9 +95,18 @@ export default function ProfilePage() {
     }
   }, [currentUser, form]);
 
+  //  fetch order when profile loads---
   useEffect(() => {
     if (currentUser?._id) {
       dispatch(getOrders(currentUser._id));
+    }
+  }, [currentUser, dispatch]);
+
+  //  fetch wishlist when profile loads---
+  useEffect(() => {
+    if (currentUser?._id) {
+      dispatch(getOrders(currentUser._id));
+      dispatch(fetchWishlist(currentUser._id));
     }
   }, [currentUser, dispatch]);
 
@@ -135,12 +147,16 @@ export default function ProfilePage() {
     }
   };
 
+  // -- coount total order and total spent --
   const totalOrders = orders.length;
 
   const totalSpent = orders.reduce(
     (sum, order) => sum + order.totalAmount,
     0
   );
+
+  //  -- count wishlist items  --
+  const wishlistCount = wishlistItems.length;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -221,12 +237,12 @@ export default function ProfilePage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Wishlist Items</span>
-                <span className="font-semibold">5</span>
+                <span className="font-semibold">{wishlistCount}</span>
               </div>
-              <div className="flex justify-between">
+              {/* <div className="flex justify-between">
                 <span className="text-muted-foreground">Loyalty Points</span>
                 <span className="font-semibold">1,248 pts</span>
-              </div>
+              </div> */}
             </CardContent>
           </Card>
         </div>

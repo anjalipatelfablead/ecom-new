@@ -24,6 +24,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/redux/store";
 import { updateUser, updateCurrentUser } from "@/redux/auth/authSlice";
 import { useEffect } from "react";
+import { getOrders } from "@/redux/products/orderSlice";
 
 const profileFormSchema = z.object({
   username: z.string().min(2, "Username must be at least 2 characters"),
@@ -42,6 +43,7 @@ export default function ProfilePage() {
   const { isAdmin } = useAuth();
   const dispatch = useDispatch<AppDispatch>();
   const { currentUser, loading } = useSelector((state: RootState) => state.auth);
+  const { orders } = useSelector((state: RootState) => state.order);
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -90,6 +92,12 @@ export default function ProfilePage() {
     }
   }, [currentUser, form]);
 
+  useEffect(() => {
+    if (currentUser?._id) {
+      dispatch(getOrders(currentUser._id));
+    }
+  }, [currentUser, dispatch]);
+
   const onSubmit = async (values: ProfileFormValues) => {
     if (!currentUser?._id) {
       toast.error("User not found. Please login again.");
@@ -126,6 +134,13 @@ export default function ProfilePage() {
       toast.error(error instanceof Error ? error.message : "Failed to update profile. Please try again.");
     }
   };
+
+  const totalOrders = orders.length;
+
+  const totalSpent = orders.reduce(
+    (sum, order) => sum + order.totalAmount,
+    0
+  );
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -198,11 +213,11 @@ export default function ProfilePage() {
             <CardContent className="space-y-4">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Total Orders</span>
-                <span className="font-semibold">12</span>
+                <span className="font-semibold">{totalOrders}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Total Spent</span>
-                <span className="font-semibold">$1,247.85</span>
+                <span className="font-semibold">  ${totalSpent.toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Wishlist Items</span>

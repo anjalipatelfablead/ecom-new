@@ -66,7 +66,7 @@ export const createOrder = createAsyncThunk(
 
 export const getOrders = createAsyncThunk(
     "orders/getOrders",
-    async (userId?: string, { rejectWithValue }) => {
+    async (userId: string | undefined, { rejectWithValue }) => {
         try {
             const url = userId ? `${API_URL}?user=${userId}` : API_URL;
             const response = await axios.get(url);

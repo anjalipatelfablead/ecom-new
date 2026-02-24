@@ -16,6 +16,7 @@ export interface User {
 
 interface AuthState {
   currentUser: User | null;
+  users: User[];
   token: string | null;
   loading: boolean;
   error: string | null;
@@ -41,6 +42,7 @@ const stored = getStoredAuth();
 
 const initialState: AuthState = {
   currentUser: stored.currentUser,
+  users: [],
   token: stored.token,
   loading: false,
   error: null,
@@ -113,6 +115,36 @@ export const updateUser = createAsyncThunk(
     } catch (error: any) {
       return thunkAPI.rejectWithValue(
         error.response?.data?.message || "Update failed"
+      );
+    }
+  }
+);
+
+// ================= DELETE USER =================
+export const deleteUser = createAsyncThunk(
+  "auth/deleteUser",
+  async (userId: string, thunkAPI) => {
+    try {
+      await axios.delete(`${API_URL}/${userId}`);
+      return userId;
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.message || "Delete failed"
+      );
+    }
+  }
+);
+
+// ================= FETCH ALL USERS =================
+export const fetchAllUsers = createAsyncThunk(
+  "auth/fetchAllUsers",
+  async (_, thunkAPI) => {
+    try {
+      const response = await axios.get(API_URL);
+      return response.data;
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.message || "Fetch users failed"
       );
     }
   }
@@ -205,6 +237,34 @@ const authSlice = createSlice({
         }
       })
       .addCase(updateUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+
+      // FETCH ALL USERS
+      .addCase(fetchAllUsers.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchAllUsers.fulfilled, (state, action: PayloadAction<User[]>) => {
+        state.loading = false;
+        state.users = action.payload;
+      })
+      .addCase(fetchAllUsers.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+
+      // DELETE USER
+      .addCase(deleteUser.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(deleteUser.fulfilled, (state, action: PayloadAction<string>) => {
+        state.loading = false;
+        state.users = state.users.filter((user) => user._id !== action.payload);
+      })
+      .addCase(deleteUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });

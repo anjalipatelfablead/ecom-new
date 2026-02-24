@@ -3,7 +3,7 @@
 import ModeToggle from "@/components/mode-toggle";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Home, LogOut, Package, Plus } from "lucide-react";
+import { Home, LogOut, Package, Plus, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
@@ -24,6 +24,11 @@ const sidebarItems = [
     title: "Add Product",
     href: "/admin/add-product",
     icon: Plus,
+  },
+  {
+    title: "User List",
+    href: "/admin/userlist",
+    icon: Users,
   },
 ];
 

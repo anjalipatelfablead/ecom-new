@@ -156,7 +156,7 @@ export default function AdminDashboard() {
               </Button>
             </Link>
             <Link href="/admin/products">
-              <Button variant="outline" className="w-full justify-start">
+              <Button variant="outline" className="w-full justify-start mt-3">
                 <Package className="mr-2 h-4 w-4" />
                 View All Products
               </Button>

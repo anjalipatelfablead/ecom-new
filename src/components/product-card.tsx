@@ -156,10 +156,20 @@ export default function ProductCard({ product }: ProductCardProps) {
               <h3 className="mr-4 line-clamp-2 flex-grow pl-2 leading-none tracking-tight">
                 {product.title}
               </h3>
-              <p className="flex-none rounded-full bg-black p-2 text-white dark:bg-white dark:text-black">
+              <p className="flex-none rounded-full bg-black p-2 text-white dark:bg-white dark:text-black mr-2">
                 ₹ {product.price.toFixed(2)}
                 <span className="ml-1 inline"></span>
               </p>
+              <Badge
+                className={`${(product.stock ?? 0) > 0
+                    ? "bg-green-500/90 text-white"
+                    : "bg-red-500/90 text-white"
+                  } backdrop-blur-md border-0 rounded-full px-2 py-1 text-xs`}
+              >
+                {(product.stock ?? 0) > 0
+                  ? `Stock: ${product.stock ?? 0}`
+                  : "Out of Stock"}
+              </Badge>
             </div>
           </div>
 
@@ -232,7 +242,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             </Badge>
           </div> */}
 
-          <div className="absolute bottom-3 right-2 ">
+          {/* <div className="absolute bottom-3 right-2 ">
             <Badge
               className={`${(product.stock ?? 0) > 0
                   ? "bg-green-500/90 text-white"
@@ -243,7 +253,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                 ? `In Stock: ${product.stock ?? 0}`
                 : "Out of Stock"}
             </Badge>
-          </div>
+          </div> */}
 
         </div>
       </Link>

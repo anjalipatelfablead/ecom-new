@@ -13,7 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
-import { useAuth } from "@/lib/auth-context";
+// import { useAuth } from "@/lib/auth-context";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, Calendar, Mail, MapPin, Phone, User } from "lucide-react";
 import Link from "next/link";
@@ -41,12 +41,15 @@ const profileFormSchema = z.object({
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 export default function ProfilePage() {
-  const { isAdmin } = useAuth();
+  // const { isAdmin } = useAuth();
   const dispatch = useDispatch<AppDispatch>();
   const { currentUser, loading } = useSelector((state: RootState) => state.auth);
   const { orders } = useSelector((state: RootState) => state.order);
 
   const { items: wishlistItems } = useSelector((state: RootState) => state.wishlist);
+
+  const isUser = currentUser?.role === "user";
+  const isAdmin = currentUser?.role === "admin";
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -222,29 +225,31 @@ export default function ProfilePage() {
           </Card>
 
           {/* Quick Stats */}
-          <Card className="mt-6">
-            <CardHeader>
-              <CardTitle>Account Stats</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Total Orders</span>
-                <span className="font-semibold">{totalOrders}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Total Spent</span>
-                <span className="font-semibold">  ${totalSpent.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Wishlist Items</span>
-                <span className="font-semibold">{wishlistCount}</span>
-              </div>
-              {/* <div className="flex justify-between">
+          {isUser && (
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle>Account Stats</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Total Orders</span>
+                  <span className="font-semibold">{totalOrders}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Total Spent</span>
+                  <span className="font-semibold">  ${totalSpent.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Wishlist Items</span>
+                  <span className="font-semibold">{wishlistCount}</span>
+                </div>
+                {/* <div className="flex justify-between">
                 <span className="text-muted-foreground">Loyalty Points</span>
                 <span className="font-semibold">1,248 pts</span>
               </div> */}
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Profile Form */}

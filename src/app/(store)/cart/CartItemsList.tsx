@@ -157,7 +157,7 @@ const SingleCartItem = memo(function SingleCartItem({
                             </h3>
                         </Link>
                         <p className="text-sm text-muted-foreground">
-                            ${product.price.toFixed(2)} each
+                            ₹ {product.price.toFixed(2)} each
                         </p>
                     </div>
 
@@ -185,7 +185,7 @@ const SingleCartItem = memo(function SingleCartItem({
                     </div>
 
                     <div className="font-semibold flex-shrink-0">
-                        ${(product.price * item.quantity).toFixed(2)}
+                        ₹ {(product.price * item.quantity).toFixed(2)}
                     </div>
 
                     <Button

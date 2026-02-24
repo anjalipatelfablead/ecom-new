@@ -65,7 +65,7 @@ const OrderCard = memo(function OrderCard({ order }: OrderCardProps) {
                             <span className="ml-1 capitalize">{order.status}</span>
                         </Badge>
                         <p className="mt-2 text-lg font-semibold">
-                            ${order.totalAmount.toFixed(2)}
+                            ₹ {order.totalAmount.toFixed(2)}
                         </p>
                     </div>
                 </div>
@@ -92,12 +92,12 @@ const OrderCard = memo(function OrderCard({ order }: OrderCardProps) {
                                 <div className="flex-1 min-w-0">
                                     <h4 className="font-medium truncate">{productInfo.title}</h4>
                                     <p className="text-muted-foreground text-sm">
-                                        ${item.price.toFixed(2)} × {item.quantity}
+                                        ₹ {item.price.toFixed(2)} × {item.quantity}
                                     </p>
                                 </div>
                                 <div className="text-right flex-shrink-0">
                                     <p className="font-medium">
-                                        ${(item.price * item.quantity).toFixed(2)}
+                                        ₹ {(item.price * item.quantity).toFixed(2)}
                                     </p>
                                 </div>
                             </div>

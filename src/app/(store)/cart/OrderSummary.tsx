@@ -42,19 +42,19 @@ export default function OrderSummary({ items }: Props) {
             <CardContent className="space-y-4">
                 <div className="flex justify-between">
                     <span>Subtotal ({summary.totalItems} items)</span>
-                    <span>${summary.totalPrice.toFixed(2)}</span>
+                    <span>₹ {summary.totalPrice.toFixed(2)}</span>
                 </div>
 
                 <div className="flex justify-between">
                     <span>Shipping</span>
                     <span>
-                        {summary.isFreeShipping ? "Free" : `$${summary.shippingCost.toFixed(2)}`}
+                        {summary.isFreeShipping ? "Free" : `₹ ${summary.shippingCost.toFixed(2)}`}
                     </span>
                 </div>
 
                 <div className="flex justify-between font-bold text-lg">
                     <span>Total</span>
-                    <span>${summary.grandTotal.toFixed(2)}</span>
+                    <span>₹ {summary.grandTotal.toFixed(2)}</span>
                 </div>
 
                 <Link href="/checkout">

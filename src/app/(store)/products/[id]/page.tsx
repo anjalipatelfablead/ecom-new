@@ -260,7 +260,7 @@ export default function ProductDetailsPage() {
                       size="lg"
                     >
                       <ShoppingCart className="mr-2 h-4 w-4" />
-                      Add to Cart - ${(product.price * quantity).toFixed(2)}
+                      Add to Cart - ₹ {(product.price * quantity).toFixed(2)}
                     </Button>
 
                     <Button

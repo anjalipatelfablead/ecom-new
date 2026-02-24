@@ -157,8 +157,8 @@ export default function ProductCard({ product }: ProductCardProps) {
                 {product.title}
               </h3>
               <p className="flex-none rounded-full bg-black p-2 text-white dark:bg-white dark:text-black">
-                ${product.price.toFixed(2)}
-                <span className="ml-1 inline">USD</span>
+                ₹ {product.price.toFixed(2)}
+                <span className="ml-1 inline"></span>
               </p>
             </div>
           </div>

@@ -422,11 +422,11 @@ export default function CheckoutPage() {
                           {item.product.title}
                         </p>
                         <p className="text-muted-foreground text-xs">
-                          ${item.product.price.toFixed(2)} × {item.quantity}
+                          ₹{item.product.price.toFixed(2)} × {item.quantity}
                         </p>
                       </div>
                       <div className="text-sm font-medium">
-                        ${(item.product.price * item.quantity).toFixed(2)}
+                        ₹ {(item.product.price * item.quantity).toFixed(2)}
                       </div>
                     </div>
                   ))}
@@ -442,24 +442,24 @@ export default function CheckoutPage() {
                       {items.reduce((sum, item) => sum + item.quantity, 0)}{" "}
                       items)
                     </span>
-                    <span>${totalPrice.toFixed(2)}</span>
+                    <span>₹ {totalPrice.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>Shipping</span>
                     <span>
                       {shippingCost === 0
                         ? "Free"
-                        : `$${shippingCost.toFixed(2)}`}
+                        : `₹ ${shippingCost.toFixed(2)}`}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>Tax</span>
-                    <span>${tax.toFixed(2)}</span>
+                    <span>₹ {tax.toFixed(2)}</span>
                   </div>
                   <hr />
                   <div className="flex justify-between text-lg font-bold">
                     <span>Total</span>
-                    <span>${finalTotal.toFixed(2)}</span>
+                    <span>₹ {finalTotal.toFixed(2)}</span>
                   </div>
                 </div>
 

@@ -226,16 +226,18 @@ export default function Navbar() {
         <div className="flex items-center space-x-4">
           <ModeToggle />
 
-          <Link href="/cart">
-            <Button variant="ghost" size="icon" className="relative">
-              <ShoppingBag className="h-4 w-4" />
-              {totalItems > 0 && (
-                <Badge className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full p-0 text-xs">
-                  {totalItems}
-                </Badge>
-              )}
-            </Button>
-          </Link>
+          {loggedUser?.role === "user" && (
+            <Link href="/cart">
+              <Button variant="ghost" size="icon" className="relative">
+                <ShoppingBag className="h-4 w-4" />
+                {totalItems > 0 && (
+                  <Badge className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full p-0 text-xs">
+                    {totalItems}
+                  </Badge>
+                )}
+              </Button>
+            </Link>
+          )}
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -276,19 +278,23 @@ export default function Navbar() {
                     </DropdownMenuItem>
                   )}
 
-                  <DropdownMenuItem asChild>
-                    <Link href="/orders" className="flex items-center">
-                      <Package className="mr-2 h-4 w-4" />
-                      <span>My Orders</span>
-                    </Link>
-                  </DropdownMenuItem>
+                  {loggedUser.role === "user" && (
+                    <>
+                      <DropdownMenuItem asChild>
+                        <Link href="/orders" className="flex items-center">
+                          <Package className="mr-2 h-4 w-4" />
+                          <span>My Orders</span>
+                        </Link>
+                      </DropdownMenuItem>
 
-                  <DropdownMenuItem asChild>
-                    <Link href="/wishlist" className="flex items-center">
-                      <Heart className="mr-2 h-4 w-4" />
-                      <span>Wishlist</span>
-                    </Link>
-                  </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/wishlist" className="flex items-center">
+                          <Heart className="mr-2 h-4 w-4" />
+                          <span>Wishlist</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    </>
+                  )}
 
                   <DropdownMenuSeparator />
 

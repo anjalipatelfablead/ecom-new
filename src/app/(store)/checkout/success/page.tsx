@@ -1,11 +1,86 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle, Home, Package } from "lucide-react";
+import { CheckCircle, Home, Package, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/redux/store";
+import { createOrder } from "@/redux/products/orderSlice";
+import { deleteCart, clearCartState } from "@/redux/products/cartSlice";
+import { toast } from "sonner";
 
 export default function CheckoutSuccessPage() {
-  // Generate a random order number for demo
-  const orderNumber = `ORD-${Date.now().toString().slice(-6)}`;
+  const dispatch = useDispatch<AppDispatch>();
+  const [orderNumber, setOrderNumber] = useState<string>("");
+  const [isProcessing, setIsProcessing] = useState(true);
+
+  useEffect(() => {
+    const processOrder = async () => {
+      const pendingOrderData = sessionStorage.getItem("pendingOrder");
+
+      if (pendingOrderData) {
+        try {
+          const pendingOrder = JSON.parse(pendingOrderData);
+
+          // Create the order in the database
+          const result = await dispatch(
+            createOrder({
+              user: pendingOrder.user,
+              items: pendingOrder.items,
+              totalAmount: pendingOrder.totalAmount,
+              shippingAddress: pendingOrder.shippingAddress,
+              paymentMethod: pendingOrder.paymentMethod,
+            })
+          ).unwrap();
+
+          // Generate order number from the created order
+          const generatedOrderNumber = `ORD-${result._id.slice(-6).toUpperCase()}`;
+          setOrderNumber(generatedOrderNumber);
+
+          // Clear the cart after successful order creation
+          if (pendingOrder.cartId) {
+            await dispatch(deleteCart(pendingOrder.cartId));
+          }
+          dispatch(clearCartState());
+
+          // Clear pending order from sessionStorage
+          sessionStorage.removeItem("pendingOrder");
+
+          toast.success("Order placed successfully!");
+        } catch (error) {
+          toast.error(error instanceof Error ? error.message : "Failed to create order");
+          // Generate a fallback order number even if order creation fails
+          setOrderNumber(`ORD-${Date.now().toString().slice(-6)}`);
+        } finally {
+          setIsProcessing(false);
+        }
+      } else {
+        // No pending order found, just show success page
+        setOrderNumber(`ORD-${Date.now().toString().slice(-6)}`);
+        setIsProcessing(false);
+      }
+    };
+
+    processOrder();
+  }, [dispatch]);
+
+  if (isProcessing) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="mx-auto max-w-2xl space-y-8 text-center">
+          <div className="space-y-4">
+            <Loader2 className="mx-auto h-24 w-24 animate-spin text-primary" />
+            <h1 className="text-3xl font-bold">Processing Your Order...</h1>
+            <p className="text-muted-foreground text-lg">
+              Please wait while we confirm your payment and create your order.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">

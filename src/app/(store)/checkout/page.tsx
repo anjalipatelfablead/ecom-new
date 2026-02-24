@@ -28,7 +28,6 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod";
 
-import { createOrder } from "@/redux/products/orderSlice";
 import router from "next/router";
 
 const checkoutFormSchema = z.object({
@@ -106,36 +105,29 @@ export default function CheckoutPage() {
       price: item.product.price,
     }));
 
-    try {
-      await dispatch(
-        createOrder({
-          user: userId,
-          items: orderItems,
-          totalAmount: finalTotal,
-          shippingAddress: {
-            username: values.username,
-            email: values.email,
-            phone: values.phone,
-            address: values.address,
-            city: values.city,
-            state: values.state,
-            zipCode: values.zipCode,
-            country: values.country,
-          },
-          paymentMethod: "stripe",
-        })
-      ).unwrap();
+    // Store order data in sessionStorage for creation after payment success
+    const pendingOrder = {
+      user: userId,
+      items: orderItems,
+      totalAmount: finalTotal,
+      shippingAddress: {
+        username: values.username,
+        email: values.email,
+        phone: values.phone,
+        address: values.address,
+        city: values.city,
+        state: values.state,
+        zipCode: values.zipCode,
+        country: values.country,
+      },
+      paymentMethod: "stripe",
+      cartId: cartId,
+    };
 
-      toast.success("Order created successfully!");
+    sessionStorage.setItem("pendingOrder", JSON.stringify(pendingOrder));
 
-      if (cartId) {
-        await dispatch(deleteCart(cartId));
-      }
-
-      window.location.href = STRIPE_PAYMENT_LINK;
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to create order");
-    }
+    // Redirect to Stripe payment
+    window.location.href = STRIPE_PAYMENT_LINK;
   };
 
   const shippingCost = totalPrice >= 100 ? 0 : 9.99;

@@ -361,6 +361,13 @@ import Image from "next/image";
 import { Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const productSchema = z.object({
   title: z.string().min(1, "Product title is required"),
@@ -368,8 +375,8 @@ const productSchema = z.object({
   image: z.string().min(1, "Product image is required"),
   description: z.string().min(1, "Description is required"),
   category: z.string().min(1, "Category is required"),
-  rating: z.string().optional(),
-  count: z.string().optional(),
+  stock: z.string().min(1, "Stock is required"),
+  status: z.string().optional(),
 });
 
 type ProductFormData = z.infer<typeof productSchema>;
@@ -393,8 +400,8 @@ export default function AddProductPage() {
       image: "",
       description: "",
       category: "",
-      rating: "",
-      count: "",
+      stock: "",
+      status: "Active",
     },
   });
 
@@ -403,7 +410,7 @@ export default function AddProductPage() {
     let fields: (keyof ProductFormData)[] = [];
 
     if (step === 1) fields = ["title", "price", "category"];
-    if (step === 2) fields = ["description", "rating", "count"];
+    if (step === 2) fields = ["description", "stock", "status"];
     if (step === 3) fields = ["image"];
 
     const valid = await form.trigger(fields);
@@ -449,8 +456,10 @@ export default function AddProductPage() {
         description: data.description,
         category: data.category,
         image: finalImageUrl,
-        rating: data.rating ? parseFloat(data.rating) : 0,
-        count: data.count ? parseInt(data.count) : 0,
+        stock: parseInt(data.stock),
+        status: data.status || "Active",
+        rating: 0,
+        count: 0,
       };
 
       await dispatch(createProduct(productData)).unwrap();
@@ -545,25 +554,42 @@ export default function AddProductPage() {
                 {step === 2 && (
                   <motion.div key="step2" variants={variants} initial="initial" animate="animate" exit="exit">
                     <div className="grid grid-cols-2 gap-4">
-                      <FormField control={form.control} name="rating" render={({ field }) => (
+                      <FormField control={form.control} name="stock" render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="mt-5">Rating</FormLabel>
-                          <Input {...field} />
+                          <FormLabel className="mt-5">Stock *</FormLabel>
+                          <FormControl>
+                            <Input type="number" min="0" placeholder="0" {...field} />
+                          </FormControl>
+                          <FormMessage />
                         </FormItem>
                       )} />
 
-                      <FormField control={form.control} name="count" render={({ field }) => (
+                      <FormField control={form.control} name="status" render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="mt-5">Count</FormLabel>
-                          <Input {...field} />
+                          <FormLabel className="mt-5">Status</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select status" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="Active">Active</SelectItem>
+                              <SelectItem value="Inactive">Inactive</SelectItem>
+                              <SelectItem value="Out of Stock">Out of Stock</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
                         </FormItem>
                       )} />
                     </div>
 
                     <FormField control={form.control} name="description" render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="mt-5">Description</FormLabel>
-                        <textarea className="w-full border rounded-md p-2" {...field} />
+                        <FormLabel className="mt-5">Description *</FormLabel>
+                        <FormControl>
+                          <textarea className="w-full border rounded-md p-2 min-h-[100px]" {...field} />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />

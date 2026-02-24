@@ -30,6 +30,13 @@ import * as z from "zod";
 import Image from "next/image";
 import { Upload, X } from "lucide-react";
 import { toast } from "sonner";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const productSchema = z.object({
   title: z.string().min(1, "Product title is required"),
@@ -37,6 +44,8 @@ const productSchema = z.object({
   image: z.string().min(1, "Product image is required"),
   description: z.string().min(1, "Description is required"),
   category: z.string().min(1, "Category is required"),
+  stock: z.string().min(1, "Stock is required"),
+  status: z.string().optional(),
 });
 
 type ProductFormData = z.infer<typeof productSchema>;
@@ -62,6 +71,8 @@ export default function EditProductPage() {
       image: "",
       description: "",
       category: "",
+      stock: "",
+      status: "Active",
     },
   });
 
@@ -79,6 +90,8 @@ export default function EditProductPage() {
         image: selectedProduct.image,
         description: selectedProduct.description,
         category: selectedProduct.category,
+        stock: selectedProduct.stock?.toString() || "0",
+        status: selectedProduct.status || "Active",
       });
       dispatch(setImageUrl(selectedProduct.image));
     }
@@ -120,6 +133,8 @@ export default function EditProductPage() {
         description: data.description,
         category: data.category,
         image: finalImageUrl,
+        stock: parseInt(data.stock),
+        status: data.status || "Active",
       };
 
       await dispatch(
@@ -206,7 +221,49 @@ export default function EditProductPage() {
                 )}
               />
 
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="stock"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Stock</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min="0"
+                          placeholder="0"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
+                <FormField
+                  control={form.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Status</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select status" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="Active">Active</SelectItem>
+                          <SelectItem value="Inactive">Inactive</SelectItem>
+                          <SelectItem value="Out of Stock">Out of Stock</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
               <FormField
                 control={form.control}

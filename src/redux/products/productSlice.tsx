@@ -80,6 +80,8 @@ export interface Product {
   description: string;
   category: string;
   image: string;
+  stock?: number;
+  status?: string;
   rating?: {
     rate: number;
     count: number;

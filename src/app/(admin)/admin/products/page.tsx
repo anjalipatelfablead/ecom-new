@@ -75,6 +75,8 @@ export default function AdminProductsPage() {
                   <TableHead>Product</TableHead>
                   <TableHead>Category</TableHead>
                   <TableHead>Price</TableHead>
+                  <TableHead>Stock</TableHead>
+                  <TableHead>Status</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -106,6 +108,18 @@ export default function AdminProductsPage() {
                     </TableCell>
                     <TableCell className="font-medium">
                       ${product.price.toFixed(2)}
+                    </TableCell>
+                    <TableCell>
+                      {(() => {
+                        const stock = product.stock ?? 0;
+                        const stockColor = stock === 0 ? 'text-red-500' : stock < 10 ? 'text-yellow-500' : 'text-green-600';
+                        return <span className={`font-medium ${stockColor}`}>{stock}</span>;
+                      })()}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={product.status === 'Active' ? 'default' : product.status === 'Out of Stock' ? 'destructive' : 'secondary'}>
+                        {product.status || 'Active'}
+                      </Badge>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center space-x-2">

@@ -58,7 +58,7 @@ export default function UserListPage() {
 
       <div className="bg-card rounded-lg border shadow-sm">
         <Table>
-          <TableHeader>
+          <TableHeader className="bg-gray-200">
             <TableRow>
               <TableHead>Username</TableHead>
               <TableHead>Email</TableHead>

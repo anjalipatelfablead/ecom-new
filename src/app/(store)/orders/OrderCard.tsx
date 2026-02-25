@@ -3,14 +3,15 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle, Clock, Package, Truck } from "lucide-react";
+import { CheckCircle, Clock, Package, Truck, MessageSquare } from "lucide-react";
 import Image from "next/image";
-import { memo } from "react";
+import { memo, useState } from "react";
 import { Order, OrderItem, cancelOrder } from "@/redux/products/orderSlice";
 
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
 import { toast } from "sonner";
+import ReviewModal from "@/app/(store)/orders/ReviewModal";
 
 interface OrderCardProps {
     order: Order;
@@ -58,6 +59,7 @@ const getProductInfo = (item: OrderItem) => {
 
 const OrderCard = memo(function OrderCard({ order }: OrderCardProps) {
     const dispatch = useDispatch<AppDispatch>();
+    const [selectedProduct, setSelectedProduct] = useState<{ _id: string; title: string } | null>(null);
 
     const handleCancel = async () => {
         if (!confirm("Cancel this order?")) return;
@@ -68,6 +70,24 @@ const OrderCard = memo(function OrderCard({ order }: OrderCardProps) {
         } catch (err: any) {
             toast.error(err);
         }
+    };
+
+    const handleFeedbackClick = (productId: string, productTitle: string) => {
+        setSelectedProduct({ _id: productId, title: productTitle });
+    };
+
+    const getProductId = (item: OrderItem): string | null => {
+        if (typeof item.product === "string") {
+            return item.product;
+        }
+        return item.product._id || null;
+    };
+
+    const getProductTitle = (item: OrderItem): string => {
+        if (typeof item.product === "string") {
+            return "Product";
+        }
+        return item.product.title || "Product";
     };
 
     return (
@@ -120,6 +140,18 @@ const OrderCard = memo(function OrderCard({ order }: OrderCardProps) {
                                     <p className="text-muted-foreground text-sm">
                                         ₹ {item.price.toFixed(2)} × {item.quantity}
                                     </p>
+                                    {/* Feedback button for delivered orders */}
+                                    {order.status === "delivered" && getProductId(item) && (
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="mt-2 h-7 text-xs"
+                                            onClick={() => handleFeedbackClick(getProductId(item)!, getProductTitle(item))}
+                                        >
+                                            <MessageSquare className="mr-1 h-3 w-3" />
+                                            Write Review
+                                        </Button>
+                                    )}
                                 </div>
                                 <div className="text-right flex-shrink-0">
                                     <p className="font-medium">
@@ -211,6 +243,16 @@ const OrderCard = memo(function OrderCard({ order }: OrderCardProps) {
                     </div>
                 )}
             </CardContent>
+
+            {/* Review Modal */}
+            {selectedProduct && (
+                <ReviewModal
+                    productId={selectedProduct._id}
+                    productTitle={selectedProduct.title}
+                    isOpen={!!selectedProduct}
+                    onClose={() => setSelectedProduct(null)}
+                />
+            )}
         </Card>
     );
 });

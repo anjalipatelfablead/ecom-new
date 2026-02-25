@@ -3,10 +3,9 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-// import { useCart } from "@/lib/cart-context";
 import { fetchProducts, fetchProductById } from "@/redux/products/productSlice";
 import { AppDispatch, RootState } from "@/redux/store";
-import { ArrowLeft, Minus, Plus, ShoppingCart, Star, Heart } from "lucide-react";
+import { ArrowLeft, Minus, Plus, ShoppingCart, Star, Heart, User } from "lucide-react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -15,6 +14,7 @@ import { toast } from "sonner";
 
 import { createCart, updateCart, fetchCart } from "@/redux/products/cartSlice";
 import { addToWishlist } from "@/redux/products/wishlistSlice";
+import { getProductReviews } from "@/redux/products/reviewSlice";
 import { getImageUrl } from "@/lib/utils";
 
 export default function ProductDetailsPage() {
@@ -25,6 +25,9 @@ export default function ProductDetailsPage() {
   );
   const { cartId, items } = useSelector(
     (state: RootState) => state.cart
+  );
+  const { productReviews, loading: reviewsLoading } = useSelector(
+    (state: RootState) => state.review
   );
   const userId = useSelector(
     (state: RootState) => state.auth.currentUser?._id
@@ -40,6 +43,7 @@ export default function ProductDetailsPage() {
   useEffect(() => {
     if (productId) {
       dispatch(fetchProductById(productId));
+      dispatch(getProductReviews(productId));
     }
   }, [dispatch, productId]);
 
@@ -327,6 +331,58 @@ export default function ProductDetailsPage() {
             </CardContent>
           </Card>
         </div>
+      </div>
+
+      {/* Reviews Section */}
+      <div className="mt-12">
+        <h2 className="mb-6 text-2xl font-bold">Customer Reviews</h2>
+        {reviewsLoading ? (
+          <div className="flex h-32 items-center justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
+        ) : productReviews.length === 0 ? (
+          <Card>
+            <CardContent className="flex h-32 flex-col items-center justify-center">
+              <p className="text-muted-foreground">No reviews yet. Be the first to review this product!</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-4">
+            {productReviews.map((review) => (
+              <Card key={review._id}>
+                <CardContent className="p-6">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
+                        <User className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+                      </div>
+                      <div>
+                        <p className="font-medium">{review.user?.username || "Anonymous"}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {new Date(review.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star
+                          key={star}
+                          className={`h-4 w-4 ${
+                            star <= review.rating
+                              ? "fill-yellow-400 text-yellow-400"
+                              : "text-gray-300"
+                          }`}
+                        />
+                      ))}
+                      <span className="ml-2 text-sm font-medium">{review.rating}/5</span>
+                    </div>
+                  </div>
+                  <p className="mt-4 text-muted-foreground">{review.comment}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

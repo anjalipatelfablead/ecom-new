@@ -32,7 +32,7 @@ export interface Order {
     };
     paymentMethod: string;
     stripeSessionId?: string;
-    status: "processing" | "shipped" | "delivered" | "cancelled";
+    status: "processing" | "confirmed" | "shipped" | "delivered" | "cancelled";
     createdAt: string;
     trackingNumber?: string | null;
     estimatedDelivery?: string;

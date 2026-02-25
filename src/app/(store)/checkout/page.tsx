@@ -27,6 +27,7 @@ import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod";
+import { useEffect } from "react";
 
 import router from "next/router";
 
@@ -56,25 +57,21 @@ type CheckoutFormValues = z.infer<typeof checkoutFormSchema>;
 export default function CheckoutPage() {
   const dispatch = useDispatch<AppDispatch>();
   const { items, cartId } = useSelector((state: RootState) => state.cart);
-  const userId = useSelector((state: RootState) => state.auth.currentUser?._id);
+  const currentUser = useSelector((state: RootState) => state.auth.currentUser);
+  const userId = currentUser?._id;
   
   const totalPrice = items.reduce(
     (sum, item) => sum + item.product.price * item.quantity,
     0
   );
 
-  const sessionUser =
-    typeof window !== "undefined"
-      ? JSON.parse(sessionStorage.getItem("loggedUser") || "{}")
-      : {};
-
   const form = useForm<CheckoutFormValues>({
     resolver: zodResolver(checkoutFormSchema),
     defaultValues: {
-      username: sessionUser.username || "",
-      email: sessionUser.email || "",
-      phone: "",
-      address: sessionUser.address || "",
+      username: currentUser?.username || "",
+      email: currentUser?.email || "",
+      phone: currentUser?.phone || "",
+      address: currentUser?.address || "",
       city: "",
       state: "",
       zipCode: "",
@@ -86,6 +83,21 @@ export default function CheckoutPage() {
       // cardholderName: "",
     },
   });
+
+  useEffect(() => {
+    if (currentUser) {
+      form.reset({
+        username: currentUser.username || "",
+        email: currentUser.email || "",
+        phone: currentUser.phone || "",
+        address: currentUser.address || "",
+        city: form.getValues("city"),
+        state: form.getValues("state"),
+        zipCode: form.getValues("zipCode"),
+        country: form.getValues("country"),
+      });
+    }
+  }, [currentUser, form]);
 
   const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/test_8x2aEZcmdaVCcc84Dxbsc02";
 

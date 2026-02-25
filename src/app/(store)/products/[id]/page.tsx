@@ -46,26 +46,33 @@ export default function ProductDetailsPage() {
 
 
 
-  // const handleAddToCart = () => {
-  //   if (product) {
-  //     addToCart(product, quantity);
-  //     toast.success(`${quantity} × ${product.title} added to cart!`);
-  //     router.push("/cart");
-  //   }
-  // };
-
-  // const handleAddToCart = () => {
-  //   if (!product) return;
-
-  //   dispatch(createCart({ product, quantity, }));
-
-  //   toast.success(`${quantity} × ${product.title} added to cart!`);
-  //   router.push("/cart");
-  // };
-
   const handleAddToCart = async () => {
     if (!product || !userId) {
       toast.error("Please login first");
+      return;
+    }
+
+    // Check stock availability
+    const currentStock = product.stock ?? 0;
+    if (currentStock <= 0) {
+      toast.error(`${product.title} is out of stock`);
+      return;
+    }
+
+    // Check if requested quantity exceeds available stock
+    const existingItem = items.find(
+      (item) => item.product._id === product._id
+    );
+    const currentQuantityInCart = existingItem?.quantity || 0;
+    const totalQuantity = currentQuantityInCart + quantity;
+
+    if (totalQuantity > currentStock) {
+      const availableToAdd = currentStock - currentQuantityInCart;
+      if (availableToAdd <= 0) {
+        toast.error(`You already have ${currentQuantityInCart} in cart. No more stock available.`);
+      } else {
+        toast.error(`Only ${availableToAdd} more item(s) can be added (stock limit: ${currentStock})`);
+      }
       return;
     }
 
@@ -76,10 +83,6 @@ export default function ProductDetailsPage() {
 
       const currentCartId = cartId;
       const currentItems = items;
-
-      const existingItem = currentItems.find(
-        (item) => item.product._id === product._id
-      );
 
       let updatedItems;
 
@@ -134,7 +137,20 @@ export default function ProductDetailsPage() {
 
 
 
-  const increaseQuantity = () => setQuantity((q) => q + 1);
+  const increaseQuantity = () => {
+    const maxStock = product?.stock ?? 0;
+    setQuantity((q) => {
+      const newQuantity = q + 1;
+      // Check if adding more would exceed available stock (considering existing cart items)
+      const existingItem = items.find((item) => item.product._id === product?._id);
+      const currentInCart = existingItem?.quantity || 0;
+      if (newQuantity + currentInCart > maxStock) {
+        toast.error(`Only ${maxStock} items available in stock`);
+        return q; // Don't increase if it would exceed stock
+      }
+      return newQuantity;
+    });
+  };
   const decreaseQuantity = () => setQuantity((q) => Math.max(1, q - 1));
 
   if (productsStatus === "loading" && !product) {
@@ -202,9 +218,11 @@ export default function ProductDetailsPage() {
             </p>
             <div>
               <Badge
-                className={`${(product.stock ?? 0) > 0
-                  ? "bg-green-500 text-white"
-                  : "bg-red-500 text-white"
+                className={`${(product.stock ?? 0) === 0
+                    ? "bg-red-500 text-white"
+                    : (product.stock ?? 0) < 10
+                      ? "bg-yellow-400 text-black"
+                      : "bg-green-500 text-white"
                   } rounded-full px-3 py-1`}
               >
                 {(product.stock ?? 0) > 0
@@ -258,6 +276,7 @@ export default function ProductDetailsPage() {
                       variant="outline"
                       size="icon"
                       onClick={increaseQuantity}
+                      disabled={quantity >= (product.stock ?? 0) - (items.find((item) => item.product._id === product._id)?.quantity || 0)}
                     >
                       <Plus className="h-4 w-4" />
                     </Button>

@@ -9,6 +9,7 @@ import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
 import { createOrder } from "@/redux/products/orderSlice";
 import { deleteCart, clearCartState } from "@/redux/products/cartSlice";
+import { updateProductStock } from "@/redux/products/productSlice";
 import { toast } from "sonner";
 
 export default function CheckoutSuccessPage() {
@@ -38,6 +39,24 @@ export default function CheckoutSuccessPage() {
           // Generate order number from the created order
           const generatedOrderNumber = `ORD-${result._id.slice(-6).toUpperCase()}`;
           setOrderNumber(generatedOrderNumber);
+
+          // Reduce stock for each ordered item
+          const stockUpdatePromises = pendingOrder.items.map((item: { product: string; quantity: number }) =>
+            dispatch(
+              updateProductStock({
+                id: item.product,
+                quantity: item.quantity,
+              })
+            ).unwrap()
+          );
+
+          try {
+            await Promise.all(stockUpdatePromises);
+            toast.success("Stock updated successfully");
+          } catch (stockError) {
+            console.error("Failed to update stock:", stockError);
+            toast.error("Order placed but stock update failed. Please contact support.");
+          }
 
           // Clear the cart after successful order creation
           if (pendingOrder.cartId) {

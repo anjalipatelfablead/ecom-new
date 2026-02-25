@@ -187,6 +187,40 @@ export const updateProduct = createAsyncThunk<
   }
 );
 
+// Update product stock (for order processing)
+export const updateProductStock = createAsyncThunk<
+  Product,
+  { id: string; quantity: number },
+  { rejectValue: string }
+>(
+  "products/updateProductStock",
+  async ({ id, quantity }, { rejectWithValue, getState }) => {
+    try {
+      // First, get current product to calculate new stock
+      const response = await axios.get(
+        `http://localhost:3030/ecom/product/${id}`
+      );
+      const currentProduct = response.data.data;
+      
+      const newStock = (currentProduct.stock || 0) - quantity;
+      
+      if (newStock < 0) {
+        return rejectWithValue(`Insufficient stock for ${currentProduct.title}`);
+      }
+      
+      // Update the product with new stock
+      const updateResponse = await axios.put(
+        `http://localhost:3030/ecom/product/${id}`,
+        { ...currentProduct, stock: newStock }
+      );
+      
+      return updateResponse.data.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || "Failed to update stock");
+    }
+  }
+);
+
 
 const productSlice = createSlice({
   name: "products",
@@ -266,6 +300,22 @@ const productSlice = createSlice({
         state.status = "failed";
         state.error = action.payload || "Failed to update product";
       })
+
+      // ------ update stock ----
+      .addCase(updateProductStock.fulfilled, (state, action: PayloadAction<Product>) => {
+        const index = state.items.findIndex(
+          (p) => p._id === action.payload._id
+        );
+        if (index !== -1) {
+          state.items[index] = action.payload;
+        }
+        if (state.selectedProduct?._id === action.payload._id) {
+          state.selectedProduct = action.payload;
+        }
+      })
+      .addCase(updateProductStock.rejected, (state, action) => {
+        state.error = action.payload || "Failed to update stock";
+      });
   },
 });
 

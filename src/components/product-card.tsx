@@ -67,6 +67,13 @@ export default function ProductCard({ product }: ProductCardProps) {
       return;
     }
 
+    // Check if product is in stock
+    const currentStock = product.stock ?? 0;
+    if (currentStock <= 0) {
+      toast.error(`${product.title} is out of stock`);
+      return;
+    }
+
     try {
       if (!cartId && items.length === 0) {
         await dispatch(fetchCart(userId)).unwrap();
@@ -78,6 +85,13 @@ export default function ProductCard({ product }: ProductCardProps) {
       const existingItem = currentItems.find(
         (item) => item.product._id === product._id
       );
+
+      // Check if adding one more would exceed stock
+      const currentQuantityInCart = existingItem?.quantity || 0;
+      if (currentQuantityInCart + 1 > currentStock) {
+        toast.error(`Only ${currentStock} items available in stock`);
+        return;
+      }
 
       let updatedItems;
 
@@ -161,9 +175,11 @@ export default function ProductCard({ product }: ProductCardProps) {
                 <span className="ml-1 inline"></span>
               </p>
               <Badge
-                className={`${(product.stock ?? 0) > 0
-                    ? "bg-green-500/90 text-white"
-                    : "bg-red-500/90 text-white"
+                className={`${(product.stock ?? 0) === 0
+                  ? "bg-red-500 text-white"
+                  : (product.stock ?? 0) < 10
+                    ? "bg-yellow-400 text-black"
+                    : "bg-green-500 text-white"
                   } backdrop-blur-md border-0 rounded-full px-2 py-1 text-xs`}
               >
                 {(product.stock ?? 0) > 0
@@ -213,7 +229,8 @@ export default function ProductCard({ product }: ProductCardProps) {
                 handleAddToCart();
               }}
               size={"icon"}
-              className="rounded-full bg-black text-white shadow-lg hover:bg-gray-800 disabled:opacity-50 dark:bg-white dark:text-black dark:hover:bg-gray-200"
+              disabled={(product.stock ?? 0) <= 0}
+              className="rounded-full bg-black text-white shadow-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-white dark:text-black dark:hover:bg-gray-200"
             >
               <ShoppingCart />
             </Button>

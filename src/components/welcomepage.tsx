@@ -6,7 +6,7 @@ export default function WelcomeUser() {
     const [username, setUsername] = useState<string | null>(null);
 
     useEffect(() => {
-        const user = sessionStorage.getItem("loggedUser");
+        const user = sessionStorage.getItem("user");
         if (user) {
             setUsername(JSON.parse(user).username);
         }
@@ -14,7 +14,7 @@ export default function WelcomeUser() {
 
     if (!username) {
         return (
-            <span className="text-primary"> to EcomStore</span>
+            <span className="text-primary"> </span>
         );
     }
 

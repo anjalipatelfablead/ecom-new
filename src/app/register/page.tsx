@@ -181,7 +181,7 @@ const Register = () => {
                 />
                 <div className="absolute inset-0 bg-black/20" />
                 <div className="absolute inset-0 flex flex-col items-center justify-center p-12 text-white">
-                    <h2 className="text-4xl font-bold mb-4">Join EcomStore</h2>
+                    <h2 className="text-4xl font-bold mb-4">Join FableadStore</h2>
                     <p className="text-lg text-center opacity-90">
                         Create an account to track orders, save your wishlist, and enjoy a seamless shopping experience.
                     </p>

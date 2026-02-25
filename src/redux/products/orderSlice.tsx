@@ -31,6 +31,7 @@ export interface Order {
         country: string;
     };
     paymentMethod: string;
+    stripeSessionId?: string;
     status: "processing" | "shipped" | "delivered";
     createdAt: string;
     trackingNumber?: string | null;
@@ -58,10 +59,12 @@ export const createOrder = createAsyncThunk(
             totalAmount: number;
             shippingAddress: any;
             paymentMethod: string;
+            stripeSessionId?: string;
         },
         { rejectWithValue }
     ) => {
         try {
+            console.log("Sending to backend:", orderData);
             const response = await axios.post(API_URL, orderData);
             return response.data.data;
         } catch (error: any) {

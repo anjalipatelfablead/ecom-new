@@ -12,6 +12,7 @@ import { deleteCart, clearCartState } from "@/redux/products/cartSlice";
 import { updateProductStock } from "@/redux/products/productSlice";
 import { toast } from "sonner";
 
+
 export default function CheckoutSuccessPage() {
   const dispatch = useDispatch<AppDispatch>();
   const [orderNumber, setOrderNumber] = useState<string>("");
@@ -20,6 +21,11 @@ export default function CheckoutSuccessPage() {
   useEffect(() => {
     const processOrder = async () => {
       const pendingOrderData = sessionStorage.getItem("pendingOrder");
+
+      const params = new URLSearchParams(window.location.search);
+      const sessionId = params.get("session_id")  || undefined;
+
+      console.log("Stripe Session ID:", sessionId);
 
       if (pendingOrderData) {
         try {
@@ -33,6 +39,7 @@ export default function CheckoutSuccessPage() {
               totalAmount: pendingOrder.totalAmount,
               shippingAddress: pendingOrder.shippingAddress,
               paymentMethod: pendingOrder.paymentMethod,
+              stripeSessionId: sessionId,
             })
           ).unwrap();
 

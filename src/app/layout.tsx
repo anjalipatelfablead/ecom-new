@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Ecom Store",
+  title: "Fablead Store",
   description: "A modern e-commerce store template",
 };
 

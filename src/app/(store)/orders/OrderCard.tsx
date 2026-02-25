@@ -132,64 +132,72 @@ const OrderCard = memo(function OrderCard({ order }: OrderCardProps) {
                 </div>
 
                 {/* Order Details */}
-                <div className="border-t pt-4">
-                    <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-3">
-                        <div>
-                            <p className="text-muted-foreground font-medium">
-                                Delivery Address
-                            </p>
-                            <p className="text-xs">
-                                {order.shippingAddress.address}, {order.shippingAddress.city}
-                            </p>
-                        </div>
-                        {order.trackingNumber && (
-                            <div>
-                                <p className="text-muted-foreground font-medium">
-                                    Tracking Number
+                <div className="border-t pt-6">
+                    <div className="flex flex-wrap items-end justify-between gap-6">
+                        <div className="flex flex-wrap gap-8 md:gap-16">
+                            <div className="space-y-1">
+                                <p className="text-muted-foreground text-xs font-semibold uppercase tracking-wider">
+                                    Delivery Address
                                 </p>
-                                <p className="font-mono">{order.trackingNumber}</p>
+                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                    {order.shippingAddress.address}, {order.shippingAddress.city}
+                                </p>
                             </div>
-                        )}
-                        <div>
-                            <p className="text-muted-foreground font-medium">Status</p>
-                            <p className="capitalize">{order.status}</p>
 
-                            {order.status === "cancelled" && (
-                                <p className="text-red-500 text-sm mt-2">
-                                    Order Cancelled
-                                </p>
+                            {order.trackingNumber && (
+                                <div className="space-y-1">
+                                    <p className="text-muted-foreground text-xs font-semibold uppercase tracking-wider">
+                                        Tracking Number
+                                    </p>
+                                    <p className="font-mono text-sm font-medium">{order.trackingNumber}</p>
+                                </div>
                             )}
 
-                            {order.isRefunded && (
-                                <p className="text-green-600 text-sm">
-                                    Refund Completed
-                                </p>
-                            )}
+                            <div className="space-y-1">
+                                <p className="text-muted-foreground text-xs font-semibold uppercase tracking-wider">Status</p>
+                                <div className="flex flex-col gap-1">
+                                    {/* <p className="text-sm font-bold capitalize text-gray-900 dark:text-gray-100">
+                                        {order.status}
+                                    </p> */}
 
-                            {order.status === "cancelled" && !order.isRefunded && (
-                                <p className="text-yellow-600 text-sm">
-                                    Refund Processing...
-                                </p>
-                            )}
+                                    {order.status !== "cancelled" && (
+                                        <p className="text-sm font-bold capitalize text-gray-900 dark:text-gray-100">
+                                            {order.status}
+                                        </p>
+                                    )}
+
+                                    {order.status === "cancelled" && (
+                                        <Badge variant="outline" className="w-fit bg-red-50 text-[10px] text-red-600 border-red-200">
+                                            Order Cancelled
+                                        </Badge>
+                                    )}
+
+                                    {order.isRefunded ? (
+                                        <Badge variant="outline" className="w-fit bg-green-50 text-[10px] text-green-600 border-green-200">
+                                            Refund Completed
+                                        </Badge>
+                                    ) : order.status === "cancelled" && (
+                                        <Badge variant="outline" className="w-fit bg-yellow-50 text-[10px] text-yellow-600 border-yellow-200 animate-pulse">
+                                            Refund Processing...
+                                        </Badge>
+                                    )}
+                                </div>
+                            </div>
                         </div>
 
-                        <div>
-                            <Button
-                                variant="destructive"
-                                size="sm"
-                                onClick={handleCancel}
-                                disabled={
-                                    order.status === "cancelled" ||
-                                    order.status === "delivered"
-                                }
-                            >
-                                Cancel Order
-                            </Button>
+                        <div className="flex-shrink-0 ml-auto">
+                            {order.status !== "cancelled" && order.status !== "delivered" && (
+                                <Button
+                                    variant="destructive"
+                                    size="sm"
+                                    onClick={handleCancel}
+                                    className="px-6 font-semibold shadow-sm transition-transform hover:scale-105"
+                                >
+                                    Cancel Order
+                                </Button>
+                            )}
                         </div>
                     </div>
-                    {/* <Button variant="outline" size="sm">
-                        Track Package
-                    </Button> */}
                 </div>
 
 

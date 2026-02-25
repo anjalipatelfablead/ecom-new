@@ -32,10 +32,18 @@ export interface Order {
     };
     paymentMethod: string;
     stripeSessionId?: string;
-    status: "processing" | "shipped" | "delivered";
+    status: "processing" | "shipped" | "delivered" | "cancelled";
     createdAt: string;
     trackingNumber?: string | null;
     estimatedDelivery?: string;
+
+    isPaid?: boolean;
+    paidAt?: string;
+
+    isRefunded?: boolean;
+    refundedAt?: string;
+
+    paymentIntentId?: string;
 }
 
 interface OrdersState {
@@ -125,12 +133,30 @@ export const deleteOrder = createAsyncThunk(
     }
 );
 
+export const cancelOrder = createAsyncThunk(
+    "orders/cancelOrder",
+    async (orderId: string, { rejectWithValue }) => {
+        try {
+            const response = await axios.put(
+                `${API_URL}/${orderId}/cancel`
+            );
+
+            return response.data.data;
+        } catch (error: any) {
+            return rejectWithValue(
+                error.response?.data?.message || "Failed to cancel order"
+            );
+        }
+    }
+);
+
 const ordersSlice = createSlice({
     name: "orders",
     initialState,
     reducers: {},
     extraReducers: (builder) => {
         builder
+            // ---- create order -----------
             .addCase(createOrder.pending, (state) => {
                 state.loading = true;
                 state.error = null;
@@ -143,6 +169,7 @@ const ordersSlice = createSlice({
                 state.loading = false;
                 state.error = action.payload as string;
             })
+            // ----------- get orders -----------
             .addCase(getOrders.pending, (state) => {
                 state.loading = true;
                 state.error = null;
@@ -155,6 +182,8 @@ const ordersSlice = createSlice({
                 state.loading = false;
                 state.error = action.payload as string;
             })
+
+            // -----------  getorder by id -----
             .addCase(getOrderById.pending, (state) => {
                 state.loading = true;
                 state.error = null;
@@ -172,6 +201,7 @@ const ordersSlice = createSlice({
                 state.loading = false;
                 state.error = action.payload as string;
             })
+            // -----------  update order status-----
             .addCase(updateOrderStatus.pending, (state) => {
                 state.loading = true;
                 state.error = null;
@@ -187,6 +217,8 @@ const ordersSlice = createSlice({
                 state.loading = false;
                 state.error = action.payload as string;
             })
+
+            // -----------  delete order ------
             .addCase(deleteOrder.pending, (state) => {
                 state.loading = true;
                 state.error = null;
@@ -196,6 +228,27 @@ const ordersSlice = createSlice({
                 state.orders = state.orders.filter((o) => o._id !== action.payload);
             })
             .addCase(deleteOrder.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload as string;
+            })
+
+            // ----------- cancel order ----
+            .addCase(cancelOrder.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(cancelOrder.fulfilled, (state, action) => {
+                state.loading = false;
+
+                const index = state.orders.findIndex(
+                    (o) => o._id === action.payload._id
+                );
+
+                if (index !== -1) {
+                    state.orders[index] = action.payload;
+                }
+            })
+            .addCase(cancelOrder.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
             });

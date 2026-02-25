@@ -6,7 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle, Clock, Package, Truck } from "lucide-react";
 import Image from "next/image";
 import { memo } from "react";
-import { Order, OrderItem } from "@/redux/products/orderSlice";
+import { Order, OrderItem, cancelOrder } from "@/redux/products/orderSlice";
+
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/redux/store";
+import { toast } from "sonner";
 
 interface OrderCardProps {
     order: Order;
@@ -14,12 +18,14 @@ interface OrderCardProps {
 
 const getStatusIcon = (status: string) => {
     switch (status) {
-        case "processing":
+        case "confirmed":
             return <Clock className="h-4 w-4" />;
         case "shipped":
             return <Truck className="h-4 w-4" />;
         case "delivered":
             return <CheckCircle className="h-4 w-4" />;
+        case "cancelled":
+            return <Package className="h-4 w-4 text-red-500" />;
         default:
             return <Package className="h-4 w-4" />;
     }
@@ -27,12 +33,14 @@ const getStatusIcon = (status: string) => {
 
 const getStatusColor = (status: string) => {
     switch (status) {
-        case "processing":
+        case "confirmed":
             return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300";
         case "shipped":
             return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300";
         case "delivered":
             return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
+        case "cancelled":
+            return "bg-red-100 text-red-800";
         default:
             return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300";
     }
@@ -49,12 +57,30 @@ const getProductInfo = (item: OrderItem) => {
 };
 
 const OrderCard = memo(function OrderCard({ order }: OrderCardProps) {
+    const dispatch = useDispatch<AppDispatch>();
+
+    const handleCancel = async () => {
+        if (!confirm("Cancel this order?")) return;
+
+        try {
+            await dispatch(cancelOrder(order._id)).unwrap();
+            toast.success("Order cancelled & refund started");
+        } catch (err: any) {
+            toast.error(err);
+        }
+    };
+
     return (
         <Card>
             <CardHeader>
                 <div className="flex items-center justify-between">
                     <div>
-                        <CardTitle className="text-lg">Order {order._id.substring(0, 8)}</CardTitle>
+                        {/* <CardTitle className="text-lg">Order {order._id.substring(0, 8)}</CardTitle> */}
+                        <CardTitle className="text-lg">
+                            {order.paymentIntentId
+                                ? `Payment ID: ${order.paymentIntentId}`
+                                : `Order ${order._id.substring(0, 8)}`}
+                        </CardTitle>
                         <p className="text-muted-foreground text-sm">
                             Placed on {new Date(order.createdAt).toLocaleDateString()}
                         </p>
@@ -127,9 +153,46 @@ const OrderCard = memo(function OrderCard({ order }: OrderCardProps) {
                         <div>
                             <p className="text-muted-foreground font-medium">Status</p>
                             <p className="capitalize">{order.status}</p>
+
+                            {order.status === "cancelled" && (
+                                <p className="text-red-500 text-sm mt-2">
+                                    Order Cancelled
+                                </p>
+                            )}
+
+                            {order.isRefunded && (
+                                <p className="text-green-600 text-sm">
+                                    Refund Completed
+                                </p>
+                            )}
+
+                            {order.status === "cancelled" && !order.isRefunded && (
+                                <p className="text-yellow-600 text-sm">
+                                    Refund Processing...
+                                </p>
+                            )}
+                        </div>
+
+                        <div>
+                            <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={handleCancel}
+                                disabled={
+                                    order.status === "cancelled" ||
+                                    order.status === "delivered"
+                                }
+                            >
+                                Cancel Order
+                            </Button>
                         </div>
                     </div>
+                    {/* <Button variant="outline" size="sm">
+                        Track Package
+                    </Button> */}
                 </div>
+
+
 
                 {/* Action Buttons */}
                 {order.trackingNumber && (

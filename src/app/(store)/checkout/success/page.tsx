@@ -146,7 +146,7 @@ export default function CheckoutSuccessPage() {
               </div>
               <div>
                 <p className="mb-1 font-medium">Order Status</p>
-                <p className="text-green-600">Processing</p>
+                <p className="text-green-600">Confirmed</p>
               </div>
             </div>
 
